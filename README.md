@@ -115,13 +115,15 @@ Add a development dependency:
 uv add --dev <package-name>
 ```
 
-### Running the Project
+### Running the Server
 
-To run the project:
+This project includes a web server built with Starlette and Uvicorn that serves static files. To start the server:
 
 ```bash
-uv run -m cj12
+uv run server.py
 ```
+
+The server will start and be available at http://localhost:8000 by default.
 
 ## Configuration
 
@@ -137,9 +139,10 @@ The project configuration is managed in `pyproject.toml`:
 2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
 4. Run tests and linting: `uv run pytest && uv run ruff check`
-5. Commit your changes: `git commit -am 'Add some feature'`
-6. Push to the branch: `git push origin feature-name`
-7. Submit a pull request
+5. Test the server: `uv run -m cj12`
+6. Commit your changes: `git commit -am 'Add some feature'`
+7. Push to the branch: `git push origin feature-name`
+8. Submit a pull request
 
 ## License
 
