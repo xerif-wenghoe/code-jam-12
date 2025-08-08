@@ -9,5 +9,10 @@ dev = ["pre-commit>=4.2.0", "pytest>=8.4.1"]
 
 [tool.ruff]
 lint.select = ["ALL"]
-lint.ignore = ["D"]
+lint.ignore = ["D", "F401"]
 lint.per-file-ignores = { "tests/**/*.py" = ["S101", "PLR2004"] }
+
+[tool.pyright]
+reportMissingImports = "none"
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
