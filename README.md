@@ -25,7 +25,7 @@ pip install uv
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/xerif-wenghoe/code-jam-12
    cd code-jam-12
    ```
 
