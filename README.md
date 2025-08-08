@@ -139,7 +139,7 @@ The project configuration is managed in `pyproject.toml`:
 2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
 4. Run tests and linting: `uv run pytest && uv run ruff check`
-5. Test the server: `uv run -m cj12`
+5. Test the server: `uv run server.py`
 6. Commit your changes: `git commit -am 'Add some feature'`
 7. Push to the branch: `git push origin feature-name`
 8. Submit a pull request
