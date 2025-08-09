@@ -1,6 +1,6 @@
-# GitHub Action workflow enforcing our code style.
+# GitHub Action workflow for running pre-commit hooks
 
-name: Lint
+name: Run pre-commit hooks
 
 # Trigger the workflow on both push (to the main repository, on the main branch)
 # and pull requests (against the main repository, but from any repo, from any branch).
@@ -15,21 +15,15 @@ on:
 concurrency: lint-${{ github.sha }}
 
 jobs:
-  lint:
+  pre-commit:
     runs-on: ubuntu-latest
-
-    env:
-      # The Python version your project uses. Feel free to change this if required.
-      PYTHON_VERSION: "3.12"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
       - name: Run pre-commit hooks
-        uses: pre-commit/action@v3.0.1
+        run: uv run pre-commit run --all-files --show-diff-on-failure
