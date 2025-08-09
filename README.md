@@ -38,14 +38,6 @@ This will create a virtual environment and install all project dependencies incl
 
 ## Development
 
-### Running Tests
-
-Run the test suite using pytest:
-
-```bash
-uv run pytest
-```
-
 ### Code Quality
 
 This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
@@ -84,7 +76,6 @@ This project comes with pre-configured pre-commit hooks for automatic code quali
 
 - **Basic checks**: TOML/YAML validation, end-of-file fixing, trailing whitespace removal
 - **Ruff**: Linting and formatting with `ruff-check` and `ruff-format`
-- **Tests**: Automatic pytest execution before commits
 
 To set up pre-commit hooks:
 
@@ -99,7 +90,7 @@ To set up pre-commit hooks:
    uv run pre-commit run --all-files
    ```
 
-Now the hooks will run automatically on every commit, ensuring code quality and running tests.
+Now the hooks will run automatically on every commit, ensuring code quality.
 
 ### Adding Dependencies
 
@@ -130,7 +121,6 @@ The server will start and be available at http://localhost:8000 by default.
 The project configuration is managed in `pyproject.toml`:
 
 - **Ruff**: Configured with comprehensive linting rules
-- **Pytest**: Set up for testing with development dependencies
 - **Python**: Requires Python 3.13+
 
 ## Contributing
