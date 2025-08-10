@@ -1,12 +1,13 @@
 # This comes from https://github.com/pyodide/pyodide/blob/main/src/py/js.pyi
 # with some minor modifications
 
-# ruff: noqa: N802, A002, A001, ANN401, PYI052, N803, N815, N801, ANN201
+# ruff: noqa: N802, A002, N803, N815, N801, ANN401
+# pyright: reportAny=false, reportExplicitAny=false
 
 from collections.abc import Callable, Iterable
 from typing import Any, Literal, overload
 
-from _pyodide._core_docs import _JsProxyMetaClass
+from _pyodide._core_docs import _JsProxyMetaClass  # pyright: ignore[reportPrivateUsage]
 from pyodide.ffi import (
     JsArray,
     JsDomElement,
@@ -17,7 +18,7 @@ from pyodide.ffi import (
 )
 from pyodide.webloop import PyodideFuture
 
-def eval(code: str) -> Any: ...
+def eval(code: str) -> Any: ...  # noqa: A001
 
 # in browser the cancellation token is an int, in node it's a special opaque
 # object.
@@ -76,10 +77,10 @@ class _TypedArray(_JsObject):
     ) -> JsTypedArray: ...
 
 class Uint8Array(_TypedArray):
-    BYTES_PER_ELEMENT = 1
+    BYTES_PER_ELEMENT: int = 1
 
 class Float64Array(_TypedArray):
-    BYTES_PER_ELEMENT = 8
+    BYTES_PER_ELEMENT: int = 8
 
 class JSON(_JsObject):
     @staticmethod
@@ -138,8 +139,8 @@ class AbortSignal(_JsObject):
     def timeout(ms: int) -> AbortSignal: ...
     aborted: bool
     reason: JsException
-    def throwIfAborted(self): ...
-    def onabort(self): ...
+    def throwIfAborted(self) -> None: ...
+    def onabort(self) -> None: ...
 
 class AbortController(_JsObject):
     @staticmethod

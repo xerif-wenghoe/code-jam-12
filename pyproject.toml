@@ -13,4 +13,4 @@ lint.ignore = ["D"]
 lint.per-file-ignores = { "tests/**/*.py" = ["S101", "PLR2004"] }
 
 [tool.pyright]
-typeCheckingMode = "off"
+reportMissingModuleSource = "none"
