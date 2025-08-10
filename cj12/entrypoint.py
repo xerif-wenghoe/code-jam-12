@@ -1,5 +1,5 @@
 from js import document
-print("newsest vers")
+
 
 async def start() -> None:
     document.title = "Code Jam 12"
