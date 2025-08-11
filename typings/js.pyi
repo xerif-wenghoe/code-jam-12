@@ -13,6 +13,7 @@ from pyodide.ffi import (
     JsDomElement,
     JsException,
     JsFetchResponse,
+    JsNull,
     JsProxy,
     JsTypedArray,
 )
@@ -88,24 +89,26 @@ class JSON(_JsObject):
     @staticmethod
     def parse(a: str) -> JsProxy: ...
 
-class DomElement(JsDomElement):
+class _DomElement(JsDomElement):
     innerText: str
     innerHTML: str
 
 class document(_JsObject):
     title: str
-    body: DomElement
-    children: list[DomElement]
+    body: _DomElement
+    children: list[_DomElement]
     @overload
     @staticmethod
     def createElement(tagName: Literal["canvas"]) -> JsCanvasElement: ...
     @overload
     @staticmethod
-    def createElement(tagName: str) -> DomElement: ...
+    def createElement(tagName: str) -> _DomElement: ...
     @staticmethod
-    def appendChild(child: DomElement) -> None: ...
+    def appendChild(child: _DomElement) -> None: ...
+    @staticmethod
+    def getElementById(id: str) -> _DomElement | JsNull: ...
 
-class JsCanvasElement(DomElement):
+class JsCanvasElement(_DomElement):
     width: int | float
     height: int | float
     def getContext(
