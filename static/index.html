@@ -35,8 +35,8 @@
           import pyodide_importer
           pyodide_importer.register_hook("/")
 
-          import cj12.entrypoint
-          await cj12.entrypoint.start()
+          import cj12.app
+          await cj12.app.App().start()
         `);
       })();
     </script>

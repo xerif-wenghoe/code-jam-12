@@ -5,7 +5,7 @@
 # pyright: reportAny=false, reportExplicitAny=false
 
 from collections.abc import Callable, Iterable
-from typing import Any, Literal, overload
+from typing import Any, Literal, overload, override
 
 from _pyodide._core_docs import _JsProxyMetaClass  # pyright: ignore[reportPrivateUsage]
 from pyodide.ffi import (
@@ -158,3 +158,9 @@ class Response(_JsObject):
 class Promise(_JsObject):
     @staticmethod
     def resolve(value: Any) -> Promise: ...
+
+class FileReader(_DomElement):
+    @override
+    @staticmethod
+    def new() -> FileReader: ...
+    def readAsBinaryString(self, file: object) -> None: ...
