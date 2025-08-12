@@ -36,6 +36,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "pyodide-py" },
     { name = "pytest" },
 ]
 
@@ -48,6 +49,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "pyodide-py", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=8.4.1" },
 ]
 
@@ -185,6 +187,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
+]
+
+[[package]]
+name = "pyodide-py"
+version = "0.28.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/3d/bdb623dc6b1165c906b958b25f81ea2b0ba2f06ded5e491d272f9a54c35d/pyodide_py-0.28.1.tar.gz", hash = "sha256:11464c6e0e3063e7c0bfc2802f53c74f75fb0834190b86bb78769f84c635a18e", size = 52569, upload-time = "2025-08-04T21:31:55.431Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/f9/a2533ac6831763c36dd1f4cb6ba9eebb8f41b1880be9e89e3b5994c6c1f8/pyodide_py-0.28.1-py3-none-any.whl", hash = "sha256:e158e58da4cee77d1dc825bdeddd689335a41b8a79b4fa4483a0f3c50e0454e7", size = 58478, upload-time = "2025-08-04T21:31:54.07Z" },
 ]
 
 [[package]]
