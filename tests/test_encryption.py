@@ -14,5 +14,5 @@ def test_encryption() -> None:
 
 
 def test_wrong_key_size() -> None:
-    with pytest.raises(ValueError, match="incorrect number of bits"):
+    with pytest.raises(ValueError, match="Incorrect number of bits"):
         _ = encrypt(b"", b"12345")
