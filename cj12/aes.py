@@ -1,4 +1,16 @@
+# ruff: noqa
+# pyright: basic
+# fmt: off
+
 import numpy as np
+
+__all__ = ["decrypt", "encrypt"]
+
+def encrypt(data: bytes, key: bytes) -> bytes:
+    return AES(key).encrypt(data)
+
+def decrypt(data: bytes, key: bytes) -> bytes:
+    return AES(key).decrypt(data)
 
 class AES:
     """
