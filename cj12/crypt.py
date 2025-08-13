@@ -32,26 +32,36 @@ class AES:
         [0x20, 0x00, 0x00, 0x00], [0x40, 0x00, 0x00, 0x00], [0x80, 0x00, 0x00, 0x00], [0x1B, 0x00, 0x00, 0x00], [0x36, 0x00, 0x00, 0x00]
     ], dtype=np.uint8))
 
+    shift_idx = np.array([[0, 1, 2, 3],   # first row unshifted
+                          [1, 2, 3, 0],   # second row rolled left by 1
+                          [2, 3, 0, 1],   # third row rolled left by 2
+                          [3, 0, 1, 2]])  # last row rolled left by 3
+
+    unshift_idx = np.array([[0, 1, 2, 3],
+                            [3, 0, 1, 2],
+                            [2, 3, 0, 1],
+                            [1, 2, 3, 0]])
+
 
     @staticmethod
-    def sub_bytes(arr: np.ndarray) -> np.ndarray:
-        return AES.sbox[arr]
+    def sub_bytes(arr: np.ndarray, sbox) -> np.ndarray:
+        return sbox[arr]
 
 
     @staticmethod
-    def mul(coeff: int, x: int) -> int:
+    def mul2(x: int) -> int:
         result = (x << 1) & 0xFF
         if x & 0x80: result ^= 0x1B
-        if coeff == 3: return result ^ x
         return result
 
 
     @staticmethod
     def mix_column(col: np.ndarray) -> np.ndarray:
-        c0 = AES.mul(2, col[0]) ^ AES.mul(3, col[1]) ^ col[2] ^ col[3]
-        c1 = col[0] ^ AES.mul(2, col[1]) ^ AES.mul(3, col[2]) ^ col[3]
-        c2 = col[0] ^ col[1] ^ AES.mul(2, col[2]) ^ AES.mul(3, col[3])
-        c3 = AES.mul(3, col[0]) ^ col[1] ^ col[2] ^ AES.mul(2, col[3])
+        x2 = AES.mul2
+        c0 = x2(col[0]) ^ (x2(col[1]) ^ col[1]) ^ col[2] ^ col[3]
+        c1 = col[0] ^ x2(col[1]) ^ (x2(col[2]) ^ col[2]) ^ col[3]
+        c2 = col[0] ^ col[1] ^ x2(col[2]) ^ x2(col[3]) ^ col[3]
+        c3 = x2(col[0]) ^ col[0] ^ col[1] ^ col[2] ^ x2(col[3])
         return np.array([c0, c1 ,c2, c3], dtype=np.uint8)
 
 
@@ -62,18 +72,28 @@ class AES:
 
 
     @staticmethod
-    def mix_columns(grid: np.ndarray) -> None:
-        for col in range(4):
-            grid[:, col] = AES.mix_column(grid[:, col])
+    def unmix_column(col: np.ndarray) -> np.ndarray:
+        x2 = AES.mul2
+        c02 = x2(col[0]); c04 = x2(c02); c08 = x2(c04)
+        c12 = x2(col[1]); c14 = x2(c12); c18 = x2(c14)
+        c22 = x2(col[2]); c24 = x2(c22); c28 = x2(c24)
+        c32 = x2(col[3]); c34 = x2(c32); c38 = x2(c34)
+        c0 = (c08 ^ c04 ^ c02) ^ (c18 ^ c12 ^ col[1]) ^ (c28 ^ c24 ^ col[2]) ^ (c38 ^ col[3])  # [14, 11, 13, 9]
+        c1 = (c08 ^ col[0]) ^ (c18 ^ c14 ^ c12) ^ (c28 ^ c22 ^ col[2]) ^ (c38 ^ c34 ^ col[3])  # [9, 14, 11, 13]
+        c2 = (c08 ^ c04 ^ col[0]) ^ (c18 ^ col[1]) ^ (c28 ^ c24 ^ c22) ^ (c38 ^ c32 ^ col[3])    # [13, 9, 14, 11]
+        c3 = (c08 ^ c02 ^ col[0]) ^ (c18 ^ c14 ^ col[1]) ^ (c28 ^ col[2]) ^ (c38 ^ c34 ^ c32)    # [11, 13, 9, 14]
+        return np.array([c0, c1 ,c2, c3], dtype=np.uint8)
 
 
     @staticmethod
-    def shift_rows(arr: np.ndarray) -> None:
-        shift_idx = np.array([[0, 1, 2, 3],   # first row unshifted
-                              [1, 2, 3, 0],   # second row rolled left by 1
-                              [2, 3, 0, 1],   # third row rolled left by 2
-                              [3, 0, 1, 2]])  # last row rolled left by 3
-        arr[:] = arr[:, np.arange(4).reshape(4, 1), shift_idx]
+    def unmix_columns(grid: np.ndarray) -> None:
+        for col in range(4):
+            grid[:, col] = AES.unmix_column(grid[:, col])
+
+
+    @staticmethod
+    def shift_rows(arr: np.ndarray, shifter) -> None:
+        arr[:] = arr[:, np.arange(4).reshape(4, 1), shifter]
 
 
     def __init__(self, key: bytes):
@@ -92,9 +112,9 @@ class AES:
         words = words.reshape(-1, 4)
         for i in range(self.Nk, len(words)):
             if i % self.Nk == 0:
-                words[i] = AES.sub_bytes(np.roll(words[i-1], -1)) ^ next(AES.Rcon) ^ words[i-4]
+                words[i] = AES.sub_bytes(np.roll(words[i-1], -1), AES.sbox) ^ next(AES.Rcon) ^ words[i-4]
             elif self.Nk == 8 and i % self.Nk == 4:
-                words[i] = AES.sub_bytes(words[i-1]) ^ words[i-4]
+                words[i] = AES.sub_bytes(words[i-1], AES.sbox) ^ words[i-4]
             else:
                 words[i] = words[i-1] ^ words[i-4]
         return words.reshape(-1, 4, 4).transpose(0, 2, 1)
@@ -111,9 +131,9 @@ class AES:
         self.debug_print(padded)
 
         for round in range(self.Nr):
-            padded = AES.sub_bytes(padded)
+            padded = AES.sub_bytes(padded, AES.sbox)
             self.debug_print(padded)
-            AES.shift_rows(padded)
+            AES.shift_rows(padded, AES.shift_idx)
             self.debug_print(padded)
             if round != self.Nr - 1:
                 for grid in padded:
@@ -122,10 +142,36 @@ class AES:
             padded ^= next(keys_iter)
             self.debug_print(padded)
 
-        return padded.tobytes()
+        return padded.transpose(0, 2, 1).tobytes()
+
+
+    def decrypt(self, data: bytes) -> bytes:
+        encrypted = np.frombuffer(data, dtype=np.uint8).reshape(-1, 4, 4).transpose(0, 2, 1).copy()
+        self.debug_print(encrypted)
+        keys_iter = reversed(self.round_keys)
+
+        # Pre-round: add round key
+        encrypted ^= next(keys_iter)
+        self.debug_print(encrypted)
+
+        for round in range(self.Nr):
+            if round != 0:
+                for grid in encrypted:
+                    AES.unmix_columns(grid)
+            self.debug_print(encrypted)
+            AES.shift_rows(encrypted, AES.unshift_idx)
+            self.debug_print(encrypted)
+            encrypted = AES.sub_bytes(encrypted, AES.sbox_inv)
+            self.debug_print(encrypted)
+            encrypted ^= next(keys_iter)
+            self.debug_print(encrypted)
+
+        encrypted = encrypted.transpose(0, 2, 1).tobytes()
+        return encrypted[:-encrypted[-1]]
 
 
     def debug_print(self, arr):
+        return
         for elem in arr.reshape(-1):
             print(f"{elem:02x} ", end='')
         print()
@@ -133,5 +179,7 @@ class AES:
 
 if __name__ == '__main__':
     aes = AES(bytes([0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c]))
-    print(aes.encrypt(bytes([0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34])))
+    encrypted = aes.encrypt(bytes([0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34]))
+    decrypted = aes.decrypt(encrypted)
+    print(decrypted)
     pass
