@@ -3,7 +3,7 @@
     <h1 class="title">Super Ultra Encryptor</h1>
   </header>
 
-  <section>
+  <section id="file-area">
     <label for="file-input" class="dropzone">
       Drag and drop files here, or click to select
     </label>
@@ -18,13 +18,17 @@
     <img src="/img/p5.jpg" class="image-placeholder" />
   </section>
 
-  <section>
-    <button id="encrypt-button" disabled>Encrypt</button>
-    <button id="decrypt-button" disabled>Decrypt</button>
-  </section>
 </main>
 
 <style>
+  :root{
+    --primary-colour: white; /*Background*/
+    --accent-colour: #282f39; /*Text*/
+    --primary-outline: #bec0d8;
+    --secondary-background: #efeef3;
+    --element-colour: rgb(244, 107, 107);
+  }
+
   header {
     text-align: center;
   }
@@ -39,8 +43,8 @@
     flex-direction: column;
     align-items: center;
     gap: 2rem;
-    margin: 3% 3% 0 3%;
-    padding: 3% 3% 0 3%;
+    margin: 3% 3% 3% 3%;
+    padding: 3% 3% 3% 3%;
     border: 3px solid #ffffff;
   }
 
@@ -55,6 +59,30 @@
 
   #file-input {
     display: none;
+  }
+
+  .file-display {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    color: black;
+  }
+
+  .inner-flex {
+    border: 3px solid #ffffff;
+    width: 100%;
+    padding: 3% 3% 3% 3%;
+  }
+
+  .right {
+    align-self: right;
+  }
+
+  .button{
+    background-color: var(--element-colour);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0px 0px 15px 5px var(--element-colour);
   }
 
   .dropzone {
