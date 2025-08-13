@@ -1,7 +1,14 @@
 import numpy as np
 
 class AES:
+    """
+    Perform AES-128, -192 or -256 encryption and decryption.
 
+    Usage:
+    ```
+    aes = AES(key: bytes)  # sets up an AES encryptor/decryptor object using key
+    ```
+    """
     # Set up S-box
     sbox = np.array([
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -27,10 +34,10 @@ class AES:
     for i in range(len(sbox)):
         sbox_inv[sbox[i]] = i
 
-    Rcon = iter(np.array([
+    Rcon = np.array([
         [0x01, 0x00, 0x00, 0x00], [0x02, 0x00, 0x00, 0x00], [0x04, 0x00, 0x00, 0x00], [0x08, 0x00, 0x00, 0x00], [0x10, 0x00, 0x00, 0x00],
         [0x20, 0x00, 0x00, 0x00], [0x40, 0x00, 0x00, 0x00], [0x80, 0x00, 0x00, 0x00], [0x1B, 0x00, 0x00, 0x00], [0x36, 0x00, 0x00, 0x00]
-    ], dtype=np.uint8))
+    ], dtype=np.uint8)
 
     shift_idx = np.array([[0, 1, 2, 3],   # first row unshifted
                           [1, 2, 3, 0],   # second row rolled left by 1
@@ -102,7 +109,7 @@ class AES:
         self.key = np.frombuffer(key, dtype=np.uint8)
         self.Nk = len(self.key) // 4  # No. of 32-bit words in `key`
         self.Nr = self.Nk + 6         # No. of encryption rounds
-        self.Nb = 4              # No. of words in AES state
+        self.Nb = 4                   # No. of words in AES state
         self.round_keys = self._key_expansion()
 
 
@@ -110,9 +117,10 @@ class AES:
         words = np.empty((self.Nb * (self.Nr + 1) * 4, ), dtype=np.uint8)
         words[:len(self.key)] = self.key
         words = words.reshape(-1, 4)
+        rcon_iter = iter(AES.Rcon)
         for i in range(self.Nk, len(words)):
             if i % self.Nk == 0:
-                words[i] = AES.sub_bytes(np.roll(words[i-1], -1), AES.sbox) ^ next(AES.Rcon) ^ words[i-4]
+                words[i] = AES.sub_bytes(np.roll(words[i-1], -1), AES.sbox) ^ next(rcon_iter) ^ words[i-4]
             elif self.Nk == 8 and i % self.Nk == 4:
                 words[i] = AES.sub_bytes(words[i-1], AES.sbox) ^ words[i-4]
             else:
@@ -178,8 +186,14 @@ class AES:
 
 
 if __name__ == '__main__':
-    aes = AES(bytes([0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c]))
-    encrypted = aes.encrypt(bytes([0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34]))
+    # aes = AES(bytes([0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c]))
+    # encrypted = aes.encrypt(bytes([0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34]))
+    # decrypted = aes.decrypt(encrypted)
+    # print(decrypted)
+    data = b"Hello, world!"
+    key = b"1234567812345678"
+    aes = AES(key)
+    encrypted = aes.encrypt(data)
+    print(encrypted)
     decrypted = aes.decrypt(encrypted)
     print(decrypted)
-    pass
