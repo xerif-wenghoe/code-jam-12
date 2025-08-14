@@ -31,6 +31,7 @@
         await pyodide.runPythonAsync(`
           import micropip
           await micropip.install("pyodide-importer")
+          await micropip.install("numpy")
 
           import pyodide_importer
           pyodide_importer.register_hook("/")
