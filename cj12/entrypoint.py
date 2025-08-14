@@ -9,6 +9,8 @@ async def start() -> None:
 
     document.title = "Code Jam 12"
 
-    resp = await pyfetch("/ui.html")
-    html = await resp.text()
-    document.body.innerHTML = html
+    # resp = await pyfetch("/ui.html")
+    # html = await resp.text()
+    # document.body.innerHTML = html
+    from cj12.chess import ChessboardLock
+    cblock = await ChessboardLock.init()
