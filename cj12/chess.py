@@ -1,6 +1,9 @@
 from js import document, Image, Promise
 from pyodide.ffi import create_proxy
 
+# Chess pieces Pixel Art by DANI MACCARI
+# https://dani-maccari.itch.io/pixel-chess
+# No changes were made.
 
 class ChessboardLock:
 
