@@ -1,12 +1,14 @@
-import base64
+import logging
 
 from js import document
-
-from .aes import encrypt
+from pyodide.http import pyfetch
 
 
 async def start() -> None:
+    logging.basicConfig(level=logging.INFO)
+
     document.title = "Code Jam 12"
-    encrypted = encrypt(b"Hello, world!", b"1234567812345678")
-    encrypted_b64 = base64.b64encode(encrypted).decode()
-    document.body.innerHTML = f"<p>Hello, world! ({encrypted_b64})</p>"
+
+    resp = await pyfetch("/ui.html")
+    html = await resp.text()
+    document.body.innerHTML = html

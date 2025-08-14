@@ -10,7 +10,6 @@
         padding: 0;
         box-sizing: border-box;
         font: inherit;
-        color: inherit;
       }
 
       body {
@@ -36,8 +35,8 @@
           import pyodide_importer
           pyodide_importer.register_hook("/")
 
-          import cj12.entrypoint
-          await cj12.entrypoint.start()
+          from cj12.app import App
+          await App().start()
         `);
       })();
     </script>
