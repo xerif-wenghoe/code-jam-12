@@ -85,11 +85,13 @@ class AES:
             [0, 1, 2, 3],  # first row unshifted
             [1, 2, 3, 0],  # second row rolled left by 1
             [2, 3, 0, 1],  # third row rolled left by 2
-            [3, 0, 1, 2],
+            [3, 0, 1, 2],  # last row rolled left by 3
         ],
-    )  # last row rolled left by 3
+    )
 
-    unshift_idx = np.array([[0, 1, 2, 3], [3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]])
+    unshift_idx = np.array(
+        [[0, 1, 2, 3], [3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]],
+    )
 
     @staticmethod
     def sub_bytes(arr: np.ndarray, sbox: np.ndarray) -> np.ndarray:
