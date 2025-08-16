@@ -1,15 +1,114 @@
 <main>
   <section id="method"></section>
 
-  <input id="file-input" type="file" />
-  <label for="file-input" id="dropzone">Select a file</label>
+  <section id="action-bar">
+    <input id="file-input" type="file" />
+    <label for="file-input" id="dropzone">Select a file</label>
 
-  <button id="encrypt-button" disabled>Encrypt</button>
-  <button id="decrypt-button" disabled>Decrypt</button>
+    <button id="encrypt-button" disabled>Encrypt</button>
+    <button id="decrypt-button" disabled>Decrypt</button>
+  </section>
 </main>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font: inherit;
+    color: inherit;
+  }
+
+  :root {
+    --bg-primary: hsl(120 100% 0%);
+    --bg-secondary: hsl(120 100% 10%);
+    --bg-tertiary: hsl(120 100% 5%);
+
+    --fg-primary: hsl(120 100% 50%);
+  }
+
+  body {
+    font-family: "JetBrains Mono", monospace;
+    background-color: var(--bg-primary);
+    color: var(--fg-primary);
+  }
+
+  main {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  button,
+  input {
+    border: 2px solid var(--fg-primary);
+    background-color: var(--bg-primary);
+    padding: 0.5rem;
+    outline: none;
+  }
+
+  button {
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 50%;
+    }
+
+    &:enabled:hover {
+      background-color: var(--bg-tertiary);
+    }
+  }
+
+  #action-bar {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+  }
+
+  #dropzone {
+    padding: 0.5rem;
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed var(--fg-primary);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--bg-tertiary);
+    }
+  }
+
   #file-input {
     display: none;
+  }
+
+  .method-selection {
+    text-align: left;
+    display: grid;
+    padding: 1rem;
+    gap: 0.5rem 1rem;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "img name"
+      "img description";
+
+    & > img {
+      grid-area: img;
+      width: 5rem;
+      aspect-ratio: 1;
+    }
+
+    & > h2 {
+      grid-area: name;
+      font-size: 20px;
+    }
+
+    & > p {
+      grid-area: description;
+    }
   }
 </style>

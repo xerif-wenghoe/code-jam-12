@@ -123,20 +123,33 @@ class Methods:
         for method in methods:
 
             async def on_select(_: object, method: Method = method) -> None:
-                self._container.innerHTML = method.html
+                self._container.innerHTML = f"""
+                    <button id="back">Back to selections</button>
+                    {method.html}
+                """
                 method.on_key_received = self._on_key_received
+                add_event_listener(
+                    elem_by_id("back"),
+                    "click",
+                    lambda _: self._register_selections(),
+                )
                 await method.setup()
 
             btn = document.createElement("button")
-            btn.className = "method"
-            btn.innerText = method.name
+            btn.className = "method-selection"
+            btn.innerHTML = f"""
+                <img src="?" />
+                <h3>{method.name}</h3>
+                <p>{method.description}</p>
+            """
             add_event_listener(btn, "click", on_select)
             self._container.appendChild(btn)
 
 
 class Method:
-    def __init__(self, *, name: str, html: str) -> None:
+    def __init__(self, *, name: str, description: str, html: str) -> None:
         self.name = name
+        self.description = description
         self.html = html
         self.on_key_received: KeyReceiveCallback | None = None
 
@@ -147,6 +160,7 @@ class PasswordMethod(Method):
     def __init__(self) -> None:
         super().__init__(
             name="Password",
+            description="Boring old password (deprecated) (please don't use)",
             html='<input id="password-input" type="text" />',
         )
 
