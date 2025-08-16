@@ -1,12 +1,9 @@
-from collections.abc import Awaitable, Callable
-
 from js import document
 
 from cj12.dom import add_event_listener, elem_by_id, fetch_text
+from cj12.methods import KeyReceiveCallback
 from cj12.methods.method import Method
 from cj12.methods.password import PasswordMethod
-
-KeyReceiveCallback = Callable[[bytes], Awaitable[None]]
 
 
 class Methods:
@@ -14,7 +11,6 @@ class Methods:
         self._on_key_received = on_key_received
         self._container = elem_by_id("method")
         self._html_cache: dict[str, str] = {}
-        self._register_selections()
 
     async def _get_cached_html(self, method: Method) -> str:
         if method.static_id not in self._html_cache:
@@ -22,12 +18,16 @@ class Methods:
             self._html_cache[method.static_id] = await fetch_text(url)
         return self._html_cache[method.static_id]
 
-    def _register_selections(self) -> None:
+    async def register_selections(self) -> None:
         self._container.innerHTML = ""
 
         methods: set[Method] = {PasswordMethod()}
 
         for method in methods:
+
+            async def on_back(_: object) -> None:
+                await self._on_key_received(None)
+                await self.register_selections()
 
             async def on_select(_: object, method: Method = method) -> None:
                 self._container.innerHTML = f"""
@@ -35,11 +35,7 @@ class Methods:
                     {await self._get_cached_html(method)}
                 """
                 method.on_key_received = self._on_key_received
-                add_event_listener(
-                    elem_by_id("back"),
-                    "click",
-                    lambda _: self._register_selections(),
-                )
+                add_event_listener(elem_by_id("back"), "click", on_back)
                 await method.setup()
 
             btn = document.createElement("button")

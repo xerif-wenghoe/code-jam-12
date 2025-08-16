@@ -9,6 +9,6 @@ class Method:
         self.static_id = static_id
         self.name = name
         self.description = description
-        self.on_key_received: Callable[[bytes], Awaitable[None]] | None = None
+        self.on_key_received: Callable[[bytes | None], Awaitable[None]] | None = None
 
     async def setup(self) -> None: ...

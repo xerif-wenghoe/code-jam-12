@@ -22,25 +22,27 @@ class App:
         self._key: bytes | None = None
 
         self._file_input = FileInput(self._on_data_received)
-        self._methods = Methods(self._on_key_received)
 
         self._encrypt_button = elem_by_id("encrypt-button", ButtonElement)
         self._decrypt_button = elem_by_id("decrypt-button", ButtonElement)
         add_event_listener(self._encrypt_button, "click", self._on_encrypt_button)
         add_event_listener(self._decrypt_button, "click", self._on_decrypt_button)
 
+        self._methods = Methods(self._on_key_received)
+        await self._methods.register_selections()
+
     async def _on_data_received(self, data: bytes) -> None:
         self._data = data
-        self._enable_encrypt_decrypt_buttons_if_valid()
+        self._update_button_availability()
 
-    async def _on_key_received(self, key: bytes) -> None:
+    async def _on_key_received(self, key: bytes | None) -> None:
         self._key = key
-        self._enable_encrypt_decrypt_buttons_if_valid()
+        self._update_button_availability()
 
-    def _enable_encrypt_decrypt_buttons_if_valid(self) -> None:
-        if self._data is not None and self._key is not None:
-            self._encrypt_button.disabled = False
-            self._decrypt_button.disabled = False
+    def _update_button_availability(self) -> None:
+        disabled = self._data is None or self._key is None
+        self._encrypt_button.disabled = disabled
+        self._decrypt_button.disabled = disabled
 
     async def _on_encrypt_button(self, _: object) -> None:
         data, key = self._ensure_data_and_key()
