@@ -1,25 +1,6 @@
-from typing import Final
-
 import numpy as np
 
 __all__ = ["decrypt", "encrypt"]
-
-
-KEY_LENGTH_16: Final[int] = 16
-KEY_LENGTH_24: Final[int] = 24
-KEY_LENGTH_32: Final[int] = 32
-
-
-def ensure_length(key: bytes) -> bytes:
-    if len(key) < KEY_LENGTH_16:
-        key = key + b"\x00" * (KEY_LENGTH_16 - len(key))
-    elif len(key) < KEY_LENGTH_24:
-        key = key + b"\x00" * (KEY_LENGTH_24 - len(key))
-    elif len(key) < KEY_LENGTH_32:
-        key = key + b"\x00" * (KEY_LENGTH_32 - len(key))
-    else:
-        key = key[:KEY_LENGTH_32]
-    return key
 
 
 def encrypt(data: bytes, key: bytes) -> bytes:
@@ -188,7 +169,7 @@ class AES:
         arr[:] = arr[:, np.arange(4).reshape(4, 1), shifter]
 
     def __init__(self, key: bytes) -> None:
-        if len(key) not in [KEY_LENGTH_16, KEY_LENGTH_24, KEY_LENGTH_32]:
+        if len(key) not in {16, 24, 32}:
             msg = "Incorrect number of bits (should be 128, 192, or 256-bit)"
             raise ValueError(msg)
         self.key = np.frombuffer(key, dtype=np.uint8)
