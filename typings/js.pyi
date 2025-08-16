@@ -80,6 +80,8 @@ class _TypedArray(_JsObject):
 
 class Uint8Array(_TypedArray):
     BYTES_PER_ELEMENT: int = 1
+    @staticmethod
+    def from_(data: bytes) -> Uint8Array: ...
     def set(self, data: bytes) -> None: ...
 
 class Float64Array(_TypedArray):
@@ -103,6 +105,7 @@ class _DomElement(JsDomElement):
     innerHTML: str
     innerText: str
     className: str
+    def removeChild(self, child: _DomElement) -> None: ...
 
 class document(_JsObject):
     title: str
@@ -171,9 +174,9 @@ class Promise(_JsObject):
     def resolve(value: Any) -> Promise: ...
 
 class FileReader(_DomElement):
-    result: str
+    result: JsProxy
 
     @override
     @staticmethod
     def new() -> FileReader: ...
-    def readAsBinaryString(self, file: object) -> None: ...
+    def readAsArrayBuffer(self, file: object) -> None: ...

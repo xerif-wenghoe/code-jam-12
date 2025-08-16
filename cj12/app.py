@@ -1,6 +1,7 @@
 from hashlib import sha256
 
-from js import URL, Blob, Uint8Array, document
+from js import URL, Blob, alert, document
+from pyodide.ffi import to_js
 
 from cj12.aes import decrypt, encrypt
 from cj12.dom import (
@@ -44,6 +45,11 @@ class App:
         self._encrypt_button.disabled = disabled
         self._decrypt_button.disabled = disabled
 
+        if self._data is not None and len(self._data) % 16 != 0:
+            # Encrypted data must be a multiple of 16 bytes
+            # If it isn't, then it can't be an encrypted file, so disable decryption
+            self._decrypt_button.disabled = True
+
     async def _on_encrypt_button(self, _: object) -> None:
         data, key = self._ensure_data_and_key()
         encrypted_data = encrypt(data, sha256(key).digest())
@@ -51,31 +57,23 @@ class App:
 
     async def _on_decrypt_button(self, _: object) -> None:
         data, key = self._ensure_data_and_key()
-        decrypted_data = decrypt(data, sha256(key).digest())
-        self._download_file(decrypted_data, "decrypted_file.bin")
+        try:
+            decrypted_data = decrypt(data, sha256(key).digest())
+            self._download_file(decrypted_data, "decrypted_file.bin")
+        except Exception as e:  # noqa: BLE001
+            print(e)  # noqa: T201
+            alert("Wrong key!")
 
     def _download_file(self, data: bytes, filename: str) -> None:
-        uint8_array = Uint8Array.new(len(data))
-        uint8_array.set(data)  # pyright: ignore[reportAttributeAccessIssue]
-
-        # Create blob from processed data
-        blob = Blob.new([uint8_array], {"type": "application/octet-stream"})
-
-        # Create download link
+        u8 = to_js(data, create_pyproxies=False)
+        blob = Blob.new([u8], {"type": "application/octet-stream"})
         url = URL.createObjectURL(blob)
-
-        # Create temporary anchor element for download
-        download_link = document.createElement("a")
-        download_link.href = url  # pyright: ignore[reportAttributeAccessIssue]
-        download_link.download = filename  # pyright: ignore[reportAttributeAccessIssue]
-        download_link.style.display = "none"
-
-        # Add to document, click, and cleanup
-        document.body.appendChild(download_link)
-        download_link.click()  # pyright: ignore[reportAttributeAccessIssue]
-        document.body.removeChild(download_link)  # pyright: ignore[reportAttributeAccessIssue]
-
-        # Clean up the URL object
+        a = document.createElement("a")
+        a.href = url  # pyright: ignore[reportAttributeAccessIssue]
+        a.download = filename  # pyright: ignore[reportAttributeAccessIssue]
+        document.body.appendChild(a)
+        a.click()  # pyright: ignore[reportAttributeAccessIssue]
+        document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
     def _ensure_data_and_key(self) -> tuple[bytes, bytes]:
