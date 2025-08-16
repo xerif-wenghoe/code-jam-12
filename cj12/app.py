@@ -1,8 +1,10 @@
 from collections.abc import Awaitable, Callable
+from hashlib import sha256
 from typing import Any
 
-from js import FileReader, alert, document
+from js import URL, Blob, FileReader, Uint8Array, alert, document
 
+from cj12.aes import decrypt, encrypt
 from cj12.dom import (
     ButtonElement,
     InputElement,
@@ -43,9 +45,37 @@ class App:
 
     async def _on_encrypt_button(self, _: object) -> None:
         data, key = self._ensure_data_and_key()
+        encrypted_data = encrypt(data, sha256(key).digest())
+        self._download_file(encrypted_data, "encrypted_file.bin")
 
     async def _on_decrypt_button(self, _: object) -> None:
         data, key = self._ensure_data_and_key()
+        decrypted_data = decrypt(data, sha256(key).digest())
+        self._download_file(decrypted_data, "decrypted_file.bin")
+
+    def _download_file(self, data: bytes, filename: str) -> None:
+        uint8_array = Uint8Array.new(len(data))
+        uint8_array.set(data)  # pyright: ignore[reportAttributeAccessIssue]
+
+        # Create blob from processed data
+        blob = Blob.new([uint8_array], {"type": "application/octet-stream"})
+
+        # Create download link
+        url = URL.createObjectURL(blob)
+
+        # Create temporary anchor element for download
+        download_link = document.createElement("a")
+        download_link.href = url  # pyright: ignore[reportAttributeAccessIssue]
+        download_link.download = filename  # pyright: ignore[reportAttributeAccessIssue]
+        download_link.style.display = "none"
+
+        # Add to document, click, and cleanup
+        document.body.appendChild(download_link)
+        download_link.click()  # pyright: ignore[reportAttributeAccessIssue]
+        document.body.removeChild(download_link)  # pyright: ignore[reportAttributeAccessIssue]
+
+        # Clean up the URL object
+        URL.revokeObjectURL(url)
 
     def _ensure_data_and_key(self) -> tuple[bytes, bytes]:
         if self._data is None or self._key is None:
@@ -117,7 +147,7 @@ class PasswordMethod(Method):
     def __init__(self) -> None:
         super().__init__(
             name="Password",
-            html='<input id="password-input" />',
+            html='<input id="password-input" type="text" />',
         )
 
     async def setup(self) -> None:

@@ -80,9 +80,18 @@ class _TypedArray(_JsObject):
 
 class Uint8Array(_TypedArray):
     BYTES_PER_ELEMENT: int = 1
+    def set(self, data: bytes) -> None: ...
 
 class Float64Array(_TypedArray):
     BYTES_PER_ELEMENT: int = 8
+
+class URL(_JsObject):
+    @staticmethod
+    def createObjectURL(blob: JsProxy) -> URL: ...
+    @staticmethod
+    def revokeObjectURL(url: URL) -> None: ...
+
+class Blob(_JsObject): ...
 
 class JSON(_JsObject):
     @staticmethod
