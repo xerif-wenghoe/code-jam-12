@@ -1,7 +1,7 @@
 # This comes from https://github.com/pyodide/pyodide/blob/main/src/py/js.pyi
 # with some minor modifications
 
-# ruff: noqa: N802, A002, N803, N815, N801, ANN401
+# ruff: noqa: N802, A002, N803, N815, N801
 # pyright: reportAny=false, reportExplicitAny=false
 
 from collections.abc import Callable, Iterable
@@ -19,6 +19,7 @@ from pyodide.ffi import (
 )
 from pyodide.webloop import PyodideFuture
 
+def alert(msg: str) -> None: ...
 def eval(code: str) -> Any: ...  # noqa: A001
 
 # in browser the cancellation token is an int, in node it's a special opaque
@@ -90,8 +91,9 @@ class JSON(_JsObject):
     def parse(a: str) -> JsProxy: ...
 
 class _DomElement(JsDomElement):
-    innerText: str
     innerHTML: str
+    innerText: str
+    className: str
 
 class document(_JsObject):
     title: str
@@ -160,6 +162,8 @@ class Promise(_JsObject):
     def resolve(value: Any) -> Promise: ...
 
 class FileReader(_DomElement):
+    result: str
+
     @override
     @staticmethod
     def new() -> FileReader: ...

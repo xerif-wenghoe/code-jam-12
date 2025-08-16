@@ -1,141 +1,15 @@
 <main>
-  <header>
-    <h1 class="title">Super Ultra Encryptor</h1>
-  </header>
+  <section id="method"></section>
 
-  <section id="file-area">
-    <label for="file-input" class="dropzone">
-      Drag and drop files here, or click to select
-    </label>
-    <input type="file" id="file-input" />
-  </section>
+  <input id="file-input" type="file" />
+  <label for="file-input" id="dropzone">Select a file</label>
 
-  <section class="selections">
-    <img src="/img/p1.jpg" class="image-placeholder" />
-    <img src="/img/p2.jpg" class="image-placeholder" />
-    <img src="/img/p3.jpg" class="image-placeholder" />
-    <img src="/img/p4.jpg" class="image-placeholder" />
-    <img src="/img/p5.png" class="image-placeholder" />
-  </section>
-
+  <button id="encrypt-button" disabled>Encrypt</button>
+  <button id="decrypt-button" disabled>Decrypt</button>
 </main>
 
 <style>
-  :root{
-    --primary-colour: white; /*Background*/
-    --accent-colour: #282f39; /*Text*/
-    --primary-outline: #bec0d8;
-    --secondary-background: #efeef3;
-    --element-colour: rgb(244, 107, 107);
-  }
-
-  header {
-    text-align: center;
-  }
-
-  .title {
-    font-size: 4rem;
-    font-weight: bolder;
-  }
-
-  main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    margin: 3% 3% 3% 3%;
-    padding: 3% 3% 3% 3%;
-    border: 3px solid #ffffff;
-  }
-
-  section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding-top: 20px;
-    width: 100%;
-  }
-
   #file-input {
     display: none;
-  }
-
-  .file-display {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    color: black;
-  }
-
-  .inner-flex {
-    border: 3px solid #ffffff;
-    width: 100%;
-    padding: 3% 3% 3% 3%;
-  }
-
-  .right {
-    align-self: right;
-  }
-
-  .button{
-    background-color: var(--element-colour);
-    color: white;
-    font-weight: bold;
-    box-shadow: 0px 0px 15px 5px var(--element-colour);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  #key-input {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid var(--primary-outline);
-    border-radius: 5px;
-    font-size: 16px;
-    margin: 10px 0;
-  }
-
-  #key-input:focus {
-    outline: none;
-    border-color: var(--element-colour);
-    box-shadow: 0px 0px 5px 2px var(--element-colour);
-  }
-
-  label {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .dropzone {
-    border: 3px dashed #ffffff;
-    border-radius: 10px;
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: large;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 20px auto;
-  }
-
-  .selections {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 128px);
-    gap: 50px;
-    justify-content: center;
-  }
-
-  .image-placeholder {
-    width: 128px;
-    height: 128px;
-    border-radius: 8px;
-    object-fit: cover;
   }
 </style>

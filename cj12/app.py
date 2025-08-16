@@ -1,212 +1,129 @@
-import logging
-from abc import ABC, abstractmethod
-from typing import final
+from collections.abc import Awaitable, Callable
+from typing import Any
 
-from js import URL, Blob, FileReader, Uint8Array, alert, document
-from pyodide.ffi import create_proxy
-from pyodide.http import pyfetch
+from js import FileReader, alert, document
 
-from cj12.aes import decrypt, encrypt, ensure_length
-from cj12.dom import ButtonElement, get_element_by_id
-from cj12.html import DOWNLOAD_SECTION, FILE_AREA
+from cj12.dom import (
+    ButtonElement,
+    InputElement,
+    add_event_listener,
+    elem_by_id,
+    fetch_text,
+)
 
-logger = logging.getLogger(__name__)
 
-
-@final
 class App:
-    def __init__(self) -> None:
-        self._data: bytes | None = None
-        self._processed_data: bytes | None = None
-        self._current_filename: str = ""
-
     async def start(self) -> None:
-        document.title = "Code Jam 12"
+        document.title = "Super Duper Encryption Tool"
         document.body.innerHTML = await fetch_text("/ui.html")
 
-        self._register_file_input_handler()
+        self._data: bytes | None = None
+        self._key: bytes | None = None
 
-    def _register_file_input_handler(self) -> None:
-        @create_proxy
-        def on_input_element_change(event: object) -> None:
-            file = event.target.files.item(0)
-            self._current_filename = file.name
-            document.getElementById("file-area").innerHTML = FILE_AREA.format(
-                file_name=file.name,
-                file_size=round(file.size / 1024, 2),
-            )
-            reader = FileReader.new()
-            reader.addEventListener("load", on_content_load)
-            reader.readAsArrayBuffer(file)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportAttributeAccessIssue]
+        self._file_input = FileInput(self._on_data_received)
+        self._methods = Methods(self._on_key_received)
 
-        @create_proxy
-        def on_content_load(event: object) -> None:
-            # Convert ArrayBuffer to bytes using Uint8Array
-            array_buffer = event.target.result  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            uint8_array = Uint8Array.new(array_buffer)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            self._data = bytes(uint8_array)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            get_element_by_id("encrypt-button", ButtonElement).disabled = False
-            get_element_by_id("decrypt-button", ButtonElement).disabled = False
+        self._encrypt_button = elem_by_id("encrypt-button", ButtonElement)
+        self._decrypt_button = elem_by_id("decrypt-button", ButtonElement)
+        add_event_listener(self._encrypt_button, "click", self._on_encrypt_button)
+        add_event_listener(self._decrypt_button, "click", self._on_decrypt_button)
 
-            # Register button handlers after they're enabled
-            self._register_encrypt_handler()
-            self._register_decrypt_handler()
+    async def _on_data_received(self, data: bytes) -> None:
+        self._data = data
+        self._enable_encrypt_decrypt_buttons_if_valid()
 
-        file_input = get_element_by_id("file-input")
-        file_input.addEventListener("change", on_input_element_change)
+    async def _on_key_received(self, key: bytes) -> None:
+        self._key = key
+        self._enable_encrypt_decrypt_buttons_if_valid()
 
-    def _register_encrypt_handler(self) -> None:
-        @create_proxy
-        def on_encrypt_click(_: object) -> None:
-            self._handle_encryption()
+    def _enable_encrypt_decrypt_buttons_if_valid(self) -> None:
+        if self._data is not None and self._key is not None:
+            self._encrypt_button.disabled = False
+            self._decrypt_button.disabled = False
 
-        encrypt_button = get_element_by_id("encrypt-button", ButtonElement)
-        encrypt_button.addEventListener("click", on_encrypt_click)
+    async def _on_encrypt_button(self, _: object) -> None:
+        data, key = self._ensure_data_and_key()
 
-    def _register_decrypt_handler(self) -> None:
-        @create_proxy
-        def on_decrypt_click(_: object) -> None:
-            self._handle_decryption()
+    async def _on_decrypt_button(self, _: object) -> None:
+        data, key = self._ensure_data_and_key()
 
-        decrypt_button = get_element_by_id("decrypt-button", ButtonElement)
-        decrypt_button.addEventListener("click", on_decrypt_click)
+    def _ensure_data_and_key(self) -> tuple[bytes, bytes]:
+        if self._data is None or self._key is None:
+            msg = "Data or key not set"
+            raise ValueError(msg)
 
-    def _handle_encryption(self) -> None:
-        if self._data is None:
-            return
+        return (self._data, self._key)
 
-        # Get key from input field
-        key_input = document.getElementById("key-input")
-        if key_input is None:
-            alert("Key input field not found")
-            return
 
-        key_value = key_input.value
-        if not key_value or key_value.strip() == "":
-            alert("Please enter an encryption key")
-            return
+class FileInput:
+    def __init__(self, on_data_received: Callable[[bytes], Awaitable[None]]) -> None:
+        self._on_data_received = on_data_received
 
-        try:
-            # Convert key to bytes (pad or truncate to 16, 24, or 32 bytes for AES)
-            key = ensure_length(key_value.encode("utf-8"))
+        self._reader = FileReader.new()
+        add_event_listener(self._reader, "load", self._on_data_load)
+        add_event_listener(self._reader, "error", self._on_error)
+        add_event_listener(elem_by_id("file-input"), "change", self._on_file_change)
 
-            # Encrypt the data
-            self._processed_data = encrypt(self._data, key)
-            self._show_download_button("encrypted")
+    def _on_file_change(self, event: Any) -> None:
+        file = event.target.files.item(0)
+        elem_by_id("dropzone").innerText = f"{file.name} ({file.size / 1024:.2f} KB)"
+        self._reader.readAsBinaryString(file)
 
-        except Exception as e:
-            logger.exception("Encryption failed")
-            alert(f"Encryption failed: {e!s}")
+    async def _on_data_load(self, _: object) -> None:
+        await self._on_data_received(self._reader.result.encode())
 
-    def _handle_decryption(self) -> None:
-        if self._data is None:
-            return
+    async def _on_error(self, _: object) -> None:
+        alert("Failed to read file")
 
-        # Get key from input field
-        key_input = document.getElementById("key-input")
-        if key_input is None:
-            alert("Key input field not found")
-            return
 
-        key_value = key_input.value
-        if not key_value or key_value.strip() == "":
-            alert("Please enter a decryption key")
-            return
+KeyReceiveCallback = Callable[[bytes], Awaitable[None]]
 
-        try:
-            # Convert key to bytes (pad or truncate to 16, 24, or 32 bytes for AES)
-            key = ensure_length(key_value.encode("utf-8"))
 
-            # Decrypt the data
-            self._processed_data = decrypt(self._data, key)
-            self._show_download_button("decrypted")
+class Methods:
+    def __init__(self, on_key_received: KeyReceiveCallback) -> None:
+        self._on_key_received = on_key_received
+        self._container = elem_by_id("method")
+        self._register_selections()
 
-        except Exception as e:
-            logger.exception("Decryption failed")
-            alert(f"Decryption failed: {e!s}")
+    def _register_selections(self) -> None:
+        self._container.innerHTML = ""
 
-    def _show_download_button(self, operation: str) -> None:
-        # Remove existing download section if any
-        existing_download = document.getElementById("download-section")
-        if existing_download:
-            existing_download.remove()
+        methods: set[Method] = {PasswordMethod()}
 
-        # Create download section
-        download_section = document.createElement("section")
-        download_section.id = "download-section"
+        for method in methods:
 
-        # Determine filename with appropriate extension
-        base_name = (
-            self._current_filename.rsplit(".", 1)[0]
-            if "." in self._current_filename
-            else self._current_filename
-        )
-        original_ext = (
-            self._current_filename.rsplit(".", 1)[1]
-            if "." in self._current_filename
-            else ""
+            async def on_select(_: object, method: Method = method) -> None:
+                self._container.innerHTML = method.html
+                method.on_key_received = self._on_key_received
+                await method.setup()
+
+            btn = document.createElement("button")
+            btn.className = "method"
+            btn.innerText = method.name
+            add_event_listener(btn, "click", on_select)
+            self._container.appendChild(btn)
+
+
+class Method:
+    def __init__(self, *, name: str, html: str) -> None:
+        self.name = name
+        self.html = html
+        self.on_key_received: KeyReceiveCallback | None = None
+
+    async def setup(self) -> None: ...
+
+
+class PasswordMethod(Method):
+    def __init__(self) -> None:
+        super().__init__(
+            name="Password",
+            html='<input id="password-input" />',
         )
 
-        if operation == "encrypted":
-            download_filename = f"{base_name}_encrypted.bin"
-        # For decryption, try to restore original extension if possible
-        elif original_ext and original_ext.lower() not in ["bin", "enc", "encrypted"]:
-            download_filename = f"{base_name}_decrypted.{original_ext}"
-        else:
-            download_filename = f"{base_name}_decrypted.bin"
+    async def setup(self) -> None:
+        self._input = elem_by_id("password-input", InputElement)
+        add_event_listener(self._input, "keydown", self._on_key_down)
 
-        download_section.innerHTML = DOWNLOAD_SECTION.format(
-            operation=operation,
-            file_size=len(self._processed_data) if self._processed_data else 0,
-            title=operation.title(),
-        )
-
-        # Insert after file display
-        file_display = document.getElementById("file-display")
-        file_display.parentNode.insertBefore(download_section, file_display.nextSibling)
-
-        # Register download button handler
-        @create_proxy
-        def on_download_click(_: object) -> None:
-            self._download_file(download_filename)
-
-        download_button = get_element_by_id("download-button", ButtonElement)
-        download_button.addEventListener("click", on_download_click)
-
-    def _download_file(self, filename: str) -> None:
-        if self._processed_data is None:
-            return
-
-        uint8_array = Uint8Array.new(len(self._processed_data))
-        uint8_array.set(self._processed_data)
-        # Create blob from processed data
-        blob = Blob.new([uint8_array], {"type": "application/octet-stream"})
-
-        # Create download link
-        url = URL.createObjectURL(blob)
-
-        # Create temporary anchor element for download
-        download_link = document.createElement("a")
-        download_link.href = url
-        download_link.download = filename
-        download_link.style.display = "none"
-
-        # Add to document, click, and cleanup
-        document.body.appendChild(download_link)
-        download_link.click()
-        document.body.removeChild(download_link)
-
-        # Clean up the URL object
-        URL.revokeObjectURL(url)
-
-
-class Method(ABC):
-    @abstractmethod
-    async def wait_for_encryption_key(self) -> bytes: ...
-    @abstractmethod
-    async def wait_for_decryption_key(self) -> bytes: ...
-
-
-async def fetch_text(url: str) -> str:
-    resp = await pyfetch(url)
-    return await resp.text()
+    async def _on_key_down(self, event: Any) -> None:
+        if self.on_key_received is not None and event.key == "Enter":
+            await self.on_key_received(self._input.value.encode())

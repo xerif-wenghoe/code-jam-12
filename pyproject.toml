@@ -14,8 +14,9 @@ dev = [
 
 [tool.ruff]
 lint.select = ["ALL"]
-lint.ignore = ["D"]
+lint.ignore = ["D", "ANN401"]
 lint.per-file-ignores = { "tests/**/*.py" = ["S101", "PLR2004"] }
 
 [tool.pyright]
-typeCheckingMode = "off"
+typeCheckingMode = "basic"
+reportMissingModuleSource = "none"
