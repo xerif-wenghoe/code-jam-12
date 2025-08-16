@@ -1,17 +1,16 @@
-from collections.abc import Awaitable, Callable
 from hashlib import sha256
-from typing import Any
 
-from js import URL, Blob, FileReader, Uint8Array, alert, document
+from js import URL, Blob, Uint8Array, document
 
 from cj12.aes import decrypt, encrypt
 from cj12.dom import (
     ButtonElement,
-    InputElement,
     add_event_listener,
     elem_by_id,
     fetch_text,
 )
+from cj12.file import FileInput
+from cj12.methods.methods import Methods
 
 
 class App:
@@ -83,91 +82,3 @@ class App:
             raise ValueError(msg)
 
         return (self._data, self._key)
-
-
-class FileInput:
-    def __init__(self, on_data_received: Callable[[bytes], Awaitable[None]]) -> None:
-        self._on_data_received = on_data_received
-
-        self._reader = FileReader.new()
-        add_event_listener(self._reader, "load", self._on_data_load)
-        add_event_listener(self._reader, "error", self._on_error)
-        add_event_listener(elem_by_id("file-input"), "change", self._on_file_change)
-
-    def _on_file_change(self, event: Any) -> None:
-        file = event.target.files.item(0)
-        elem_by_id("dropzone").innerText = f"{file.name} ({file.size / 1024:.2f} KB)"
-        self._reader.readAsBinaryString(file)
-
-    async def _on_data_load(self, _: object) -> None:
-        await self._on_data_received(self._reader.result.encode())
-
-    async def _on_error(self, _: object) -> None:
-        alert("Failed to read file")
-
-
-KeyReceiveCallback = Callable[[bytes], Awaitable[None]]
-
-
-class Methods:
-    def __init__(self, on_key_received: KeyReceiveCallback) -> None:
-        self._on_key_received = on_key_received
-        self._container = elem_by_id("method")
-        self._register_selections()
-
-    def _register_selections(self) -> None:
-        self._container.innerHTML = ""
-
-        methods: set[Method] = {PasswordMethod()}
-
-        for method in methods:
-
-            async def on_select(_: object, method: Method = method) -> None:
-                self._container.innerHTML = f"""
-                    <button id="back">Back to selections</button>
-                    {await fetch_text(f"/methods/{method.static_id}/page.html")}
-                """
-                method.on_key_received = self._on_key_received
-                add_event_listener(
-                    elem_by_id("back"),
-                    "click",
-                    lambda _: self._register_selections(),
-                )
-                await method.setup()
-
-            btn = document.createElement("button")
-            btn.className = "method-selection"
-            btn.innerHTML = f"""
-                <img src="/methods/{method.static_id}/img.png" />
-                <h3>{method.name}</h3>
-                <p>{method.description}</p>
-            """
-            add_event_listener(btn, "click", on_select)
-            self._container.appendChild(btn)
-
-
-class Method:
-    def __init__(self, *, static_id: str, name: str, description: str) -> None:
-        self.static_id = static_id
-        self.name = name
-        self.description = description
-        self.on_key_received: KeyReceiveCallback | None = None
-
-    async def setup(self) -> None: ...
-
-
-class PasswordMethod(Method):
-    def __init__(self) -> None:
-        super().__init__(
-            static_id="password",
-            name="Password",
-            description="Boring old password (deprecated) (please don't use)",
-        )
-
-    async def setup(self) -> None:
-        self._input = elem_by_id("password-input", InputElement)
-        add_event_listener(self._input, "keydown", self._on_key_down)
-
-    async def _on_key_down(self, event: Any) -> None:
-        if self.on_key_received is not None and event.key == "Enter":
-            await self.on_key_received(self._input.value.encode())
