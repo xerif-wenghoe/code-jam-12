@@ -125,7 +125,7 @@ class Methods:
             async def on_select(_: object, method: Method = method) -> None:
                 self._container.innerHTML = f"""
                     <button id="back">Back to selections</button>
-                    {method.html}
+                    {await fetch_text(f"/methods/{method.static_id}/page.html")}
                 """
                 method.on_key_received = self._on_key_received
                 add_event_listener(
@@ -138,7 +138,7 @@ class Methods:
             btn = document.createElement("button")
             btn.className = "method-selection"
             btn.innerHTML = f"""
-                <img src="?" />
+                <img src="/methods/{method.static_id}/img.png" />
                 <h3>{method.name}</h3>
                 <p>{method.description}</p>
             """
@@ -147,10 +147,10 @@ class Methods:
 
 
 class Method:
-    def __init__(self, *, name: str, description: str, html: str) -> None:
+    def __init__(self, *, static_id: str, name: str, description: str) -> None:
+        self.static_id = static_id
         self.name = name
         self.description = description
-        self.html = html
         self.on_key_received: KeyReceiveCallback | None = None
 
     async def setup(self) -> None: ...
@@ -159,9 +159,9 @@ class Method:
 class PasswordMethod(Method):
     def __init__(self) -> None:
         super().__init__(
+            static_id="password",
             name="Password",
             description="Boring old password (deprecated) (please don't use)",
-            html='<input id="password-input" type="text" />',
         )
 
     async def setup(self) -> None:
