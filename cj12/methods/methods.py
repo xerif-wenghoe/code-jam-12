@@ -13,7 +13,14 @@ class Methods:
     def __init__(self, on_key_received: KeyReceiveCallback) -> None:
         self._on_key_received = on_key_received
         self._container = elem_by_id("method")
+        self._html_cache: dict[str, str] = {}
         self._register_selections()
+
+    async def _get_cached_html(self, method: Method) -> str:
+        if method.static_id not in self._html_cache:
+            url = f"/methods/{method.static_id}/page.html"
+            self._html_cache[method.static_id] = await fetch_text(url)
+        return self._html_cache[method.static_id]
 
     def _register_selections(self) -> None:
         self._container.innerHTML = ""
@@ -25,7 +32,7 @@ class Methods:
             async def on_select(_: object, method: Method = method) -> None:
                 self._container.innerHTML = f"""
                     <button id="back">Back to selections</button>
-                    {await fetch_text(f"/methods/{method.static_id}/page.html")}
+                    {await self._get_cached_html(method)}
                 """
                 method.on_key_received = self._on_key_received
                 add_event_listener(
