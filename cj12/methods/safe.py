@@ -7,8 +7,14 @@ from cj12.methods import KeyReceiveCallback
 
 KNOB_RADIUS = 120
 OUTER_RADIUS = 200
-TICKS = 100
-TICK_INTERVALS = (10, 5, 1)
+TICK_CHOICES = (
+    (12, (1, 1, 1)),
+    (24, (3, 1, 1)),
+    (64, (8, 4, 1)),
+    (72, (6, 3, 1)),
+    (100, (10, 5, 1)),
+)
+TICKS, TICK_INTERVALS = TICK_CHOICES[2]
 TICK_LENGTHS = (25, 20, 10)
 TICK_WIDTHS = (3, 2, 1)
 GREY_GRADIENT = (int("0x33", 16), int("0xAA", 16))
@@ -63,6 +69,8 @@ class SafeMethod:
         ctx.translate(self.static_canvas.width / 2, self.static_canvas.height / 2)
         ctx.fillStyle = "#FFFFFF"
 
+        self.dial_input_range = elem_by_id("dial-num")
+
         # draw outer dial
         ctx.save()
         radial_grad = ctx.createRadialGradient(0, 0, KNOB_RADIUS, 0, 0, OUTER_RADIUS)
@@ -113,6 +121,7 @@ class SafeMethod:
         add_event_listener(self.dial_canvas, "mousedown", self.on_mouse_down)
         add_event_listener(self.dial_canvas, "mousemove", self.on_mouse_move)
         add_event_listener(self.dial_canvas, "mouseup", self.on_mouse_up)
+        add_event_listener(self.dial_input_range, "input", self.change_dial_type)
 
         self.btn_reset = elem_by_id("btn-reset")
         add_event_listener(self.btn_reset, "click", self.reset_combination)
@@ -216,33 +225,12 @@ class SafeMethod:
         if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:
             self.register_knob_turn()
 
-    def change_knob_type(self, num):
+    def change_dial_type(self, event):
+        print("Received:", event)
         global TICKS, TICK_INTERVALS
-        match num:
-            case 100:
-                TICKS = 100
-                TICK_INTERVALS = (10, 5, 1)
-            case 72:
-                TICKS = 72
-                TICK_INTERVALS = (12, 4, 1)
-            case 64:
-                TICKS = 64
-                TICK_INTERVALS = (8, 4, 1)
-            case 12:
-                TICKS = 12
-                TICK_INTERVALS = (3, 3, 1)
-            case _:
-                raise ValueError(
-                    f"Invalid knob type ({num})! Must be 100, 72, 64 or 12.",
-                )
-
-        self.combination = []
-        self.last_mousedown = None  # angle at which the mouse was clicked
-        self.last_dial_value = 0  # value at which the dial was previously left at
-        self.prev_angle = None  # angle at which the mouse was last detected
-        self.total_angle = None
+        TICKS, TICK_INTERVALS = TICK_CHOICES[int(event.target.value)]
         self.prerender_ticks()
-        self.draw_ticks()
+        self.reset_combination(event)
 
     def register_knob_turn(self):
         val = (1 if self.total_angle >= 0 else -1) * round(
