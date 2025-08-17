@@ -5,6 +5,7 @@ from cj12.methods import KeyReceiveCallback
 
 
 class PasswordMethod:
+    byte = 0x01
     static_id = "password"
     name = "Password"
     description = "Plain password (deprecated)"

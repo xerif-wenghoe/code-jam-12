@@ -5,6 +5,7 @@ from cj12.methods import KeyReceiveCallback
 
 
 class LocationMethod:
+    byte = 0x03
     static_id = "location"
     name = "Location"
     description = "A physical location"

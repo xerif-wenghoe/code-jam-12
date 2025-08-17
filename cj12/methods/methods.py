@@ -10,6 +10,7 @@ from cj12.methods.password import PasswordMethod
 
 
 class Method(Protocol):
+    byte: int
     static_id: str
     name: str
     description: str
@@ -19,7 +20,7 @@ class Method(Protocol):
     async def setup(self) -> None: ...
 
 
-methods: list[Method] = [PasswordMethod(), LocationMethod(), ChessMethod()]
+methods: list[Method] = [PasswordMethod(), ChessMethod(), LocationMethod()]
 
 
 class Methods:
@@ -27,6 +28,7 @@ class Methods:
         self._on_key_received = on_key_received
         self._container = elem_by_id("method")
         self._html_cache: dict[str, str] = {}
+        self.current: Method | None = None
 
     async def _get_cached_html(self, method: Method) -> str:
         if method.static_id not in self._html_cache:
@@ -39,20 +41,6 @@ class Methods:
         selections_container = elem_by_id("method-selections")
 
         for method in methods:
-
-            async def on_back(_: object) -> None:
-                await self._on_key_received(None)
-                await self.register_selections()
-
-            async def on_select(_: object, method: Method = method) -> None:
-                self._container.innerHTML = f"""
-                    <button id="back">Back to selections</button>
-                    {await self._get_cached_html(method)}
-                """
-                method.on_key_received = self._on_key_received
-                add_event_listener(elem_by_id("back"), "click", on_back)
-                await method.setup()
-
             btn = document.createElement("button")
             btn.className = "method-selection"
             btn.innerHTML = f"""
@@ -60,5 +48,23 @@ class Methods:
                 <h3>{method.name}</h3>
                 <p>{method.description}</p>
             """
-            add_event_listener(btn, "click", on_select)
+
+            async def wrapper(_: object, method: Method = method) -> None:
+                await self.go_to(method)
+
+            add_event_listener(btn, "click", wrapper)
             selections_container.appendChild(btn)
+
+    async def _on_back(self, _: object) -> None:
+        await self._on_key_received(None)
+        await self.register_selections()
+
+    async def go_to(self, method: Method) -> None:
+        self.current = method
+        self._container.innerHTML = f"""
+            <button id="back">Back to selections</button>
+            {await self._get_cached_html(method)}
+        """
+        method.on_key_received = self._on_key_received
+        add_event_listener(elem_by_id("back"), "click", self._on_back)
+        await method.setup()

@@ -1,9 +1,11 @@
+from contextlib import suppress
 from hashlib import sha256
 
-from js import URL, Blob, alert, document
+from js import URL, Blob, document
 from pyodide.ffi import to_js
 
 from cj12.aes import decrypt, encrypt
+from cj12.container import Container, InvalidMagicError
 from cj12.dom import (
     ButtonElement,
     add_event_listener,
@@ -11,7 +13,7 @@ from cj12.dom import (
     fetch_text,
 )
 from cj12.file import FileInput
-from cj12.methods.methods import Methods
+from cj12.methods.methods import Methods, methods
 
 
 class App:
@@ -21,8 +23,10 @@ class App:
 
         self._data: bytes | None = None
         self._key: bytes | None = None
+        self._container: Container | None = None
 
         self._file_input = FileInput(self._on_data_received)
+        self._filename = ""
 
         self._encrypt_button = elem_by_id("encrypt-button", ButtonElement)
         self._decrypt_button = elem_by_id("decrypt-button", ButtonElement)
@@ -32,8 +36,18 @@ class App:
         self._methods = Methods(self._on_key_received)
         await self._methods.register_selections()
 
-    async def _on_data_received(self, data: bytes) -> None:
+    async def _on_data_received(self, data: bytes, filename: str) -> None:
         self._data = data
+        self._filename = filename
+
+        with suppress(InvalidMagicError):
+            self._container = Container.from_bytes(data)
+
+        if self._container is not None:
+            for method in methods:
+                if method.byte == self._container.method:
+                    await self._methods.go_to(method)
+
         self._update_button_availability()
 
     async def _on_key_received(self, key: bytes | None) -> None:
@@ -45,24 +59,31 @@ class App:
         self._encrypt_button.disabled = disabled
         self._decrypt_button.disabled = disabled
 
-        if self._data is not None and len(self._data) % 16 != 0:
-            # Encrypted data must be a multiple of 16 bytes
-            # If it isn't, then it can't be an encrypted file, so disable decryption
+        if self._container is None:
             self._decrypt_button.disabled = True
 
     async def _on_encrypt_button(self, _: object) -> None:
+        if self._methods.current is None:
+            return
+
         data, key = self._ensure_data_and_key()
-        encrypted_data = encrypt(data, sha256(key).digest())
-        self._download_file(encrypted_data, "encrypted_file.bin")
+
+        container = Container(
+            method=self._methods.current.byte,
+            original_filename=self._filename,
+            data=encrypt(data, sha256(key).digest()),
+        )
+
+        self._download_file(bytes(container), "encrypted_file.bin")
 
     async def _on_decrypt_button(self, _: object) -> None:
-        data, key = self._ensure_data_and_key()
-        try:
-            decrypted_data = decrypt(data, sha256(key).digest())
-            self._download_file(decrypted_data, "decrypted_file.bin")
-        except Exception as e:  # noqa: BLE001
-            print(e)  # noqa: T201
-            alert("Wrong key!")
+        if self._container is None:
+            return
+
+        _, key = self._ensure_data_and_key()
+
+        decrypted = decrypt(self._container.data, sha256(key).digest())
+        self._download_file(decrypted, self._container.original_filename)
 
     def _download_file(self, data: bytes, filename: str) -> None:
         u8 = to_js(data, create_pyproxies=False)
