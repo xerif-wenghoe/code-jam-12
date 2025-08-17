@@ -1,0 +1,22 @@
+<div id="canvasses">
+    <canvas id="grid"></canvas>
+</div>
+
+<style>
+  #method {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  #canvasses {
+    grid-column: span 3;
+    display: grid;
+    place-items: center;
+    & > canvas {
+      grid-area: 1 / 1;
+    }
+  }
+</style>

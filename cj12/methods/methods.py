@@ -8,6 +8,7 @@ from cj12.methods.chess import ChessMethod
 from cj12.methods.location import LocationMethod
 from cj12.methods.password import PasswordMethod
 from cj12.methods.safe import SafeMethod
+from cj12.methods.pattern_lock import PatternLockMethod
 
 
 class Method(Protocol):
@@ -26,6 +27,7 @@ methods: list[Method] = [
     ChessMethod(),
     LocationMethod(),
     SafeMethod(),
+    PatternLockMethod()
 ]
 
 
