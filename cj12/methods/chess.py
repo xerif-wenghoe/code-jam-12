@@ -9,7 +9,7 @@ from cj12.methods import KeyReceiveCallback
 SQUARE_SIZE = 44
 PIECE_SCALE = 2.5
 PIECE_BASE_OFFSET = 8
-
+MOUSE_DEADZONE_RADIUS = 7
 
 class ChessMethod:
     static_id = "chess"
@@ -257,7 +257,8 @@ class ChessMethod:
 
     async def on_mouse_up(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
-        if self.last_mousedown != (mx, my):  # noqa: SIM102
+        px, py = self.last_mousedown
+        if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS ** 2:  # noqa: SIM102
             if self.dragging is not None and (
                 board_square := self.mouse_on_board_square(mx, my)
             ):
