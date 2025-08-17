@@ -14,7 +14,7 @@ KNOB_SLICES = 180
 TWO_PI = 2 * math.pi
 
 
-class SafeLock:
+class SafeMethod:
 
     @staticmethod
     def grey(frac):
@@ -24,7 +24,7 @@ class SafeLock:
 
         self.combination = []
         self.last_mousedown = None  # angle at which the mouse was clicked
-        self.last_dial_angle = 0  # angle at which the dial was previously left at
+        self.last_dial_value = 0  # value at which the dial was previously left at
         self.prev_angle = None  # angle at which the mouse was last detected
         self.total_angle = None
 
@@ -49,6 +49,14 @@ class SafeLock:
         self.knob_canvas.width = 2 * OUTER_RADIUS + 20
         self.knob_canvas.height = 2 * OUTER_RADIUS + 40
         self.knob_canvas.style.zIndex = 0
+
+        self.offscreen_canvas = document.createElement("canvas")
+        self.offscreen_canvas.width = 2 * OUTER_RADIUS + 20
+        self.offscreen_canvas.height = 2 * OUTER_RADIUS + 40
+        ctx = self.offscreen_canvas.getContext("2d")
+        ctx.fillStyle = "#FFFFFF"
+        ctx.translate(self.ticks_canvas.width / 2, self.ticks_canvas.height / 2)
+
         self.ticks_canvas = document.createElement("canvas")
         self.ticks_canvas.width = 2 * OUTER_RADIUS + 20
         self.ticks_canvas.height = 2 * OUTER_RADIUS + 40
@@ -89,7 +97,7 @@ class SafeLock:
             ctx.arc(0, 0, KNOB_RADIUS + (slc % 2) * 2, 0, d_theta * 1.005)
             ctx.closePath()
             sin2x, cos4x = math.sin(2 * theta), math.cos(4 * theta)
-            ctx.strokeStyle = ctx.fillStyle = SafeLock.grey(1 - ((sin2x + cos4x) ** 2) / 4)
+            ctx.strokeStyle = ctx.fillStyle = SafeMethod.grey(1 - ((sin2x + cos4x) ** 2) / 4)
             ctx.stroke()
             ctx.fill()
             ctx.restore()
@@ -112,12 +120,9 @@ class SafeLock:
 
 
     def prerender_ticks(self):
-        self.offscreen_canvas = document.createElement("canvas")
-        self.offscreen_canvas.width = 2 * OUTER_RADIUS + 20
-        self.offscreen_canvas.height = 2 * OUTER_RADIUS + 40
         ctx = self.offscreen_canvas.getContext("2d")
-        ctx.fillStyle = "#FFFFFF"
-        ctx.translate(self.ticks_canvas.width / 2, self.ticks_canvas.height / 2)
+        w, h = self.offscreen_canvas.width, self.offscreen_canvas.height
+        ctx.clearRect(-w / 2, -h / 2, w, h)
         ctx.save()
         for tick in range(TICKS):
             ctx.save()
@@ -197,8 +202,8 @@ class SafeLock:
         pi_diffs = abs(diff) // math.pi
         if pi_diffs % 2 == 1: pi_diffs += 1
         self.total_angle = d_theta + (-1 if diff < 0 else 1) * pi_diffs * math.pi
-        self.log_output(f"Total: {self.total_angle}")
-        self.draw_ticks(self.total_angle + self.last_dial_angle)
+        # self.log_output(f"Total: {self.total_angle}")
+        self.draw_ticks(self.total_angle + self.last_dial_value * TWO_PI / TICKS)
 
 
     def on_mouse_up(self, event):
@@ -206,5 +211,38 @@ class SafeLock:
         if self.last_mousedown != (mx, my):
             self.register_knob_turn()
 
+
+    def change_knob_type(self, num):
+        global TICKS, TICK_INTERVALS
+        match num:
+            case 100:
+                TICKS = 100
+                TICK_INTERVALS = (10, 5, 1)
+            case 72:
+                TICKS = 72
+                TICK_INTERVALS = (12, 4, 1)
+            case 64:
+                TICKS = 64
+                TICK_INTERVALS = (8, 4, 1)
+            case 12:
+                TICKS = 12
+                TICK_INTERVALS = (3, 3, 1)
+            case _:
+                raise ValueError(f"Invalid knob type ({num})! Must be 100, 72, 64 or 12.")
+
+        self.combination = []
+        self.last_mousedown = None  # angle at which the mouse was clicked
+        self.last_dial_value = 0  # value at which the dial was previously left at
+        self.prev_angle = None  # angle at which the mouse was last detected
+        self.total_angle = None
+        self.prerender_ticks()
+        self.draw_ticks()
+
+
     def register_knob_turn(self):
-        pass
+        val = (1 if self.total_angle >= 0 else -1) * round(self.total_angle * TICKS / TWO_PI) 
+        self.combination.append(val)
+        self.last_mousedown = None
+        self.last_dial_value = (self.last_dial_value + val) % TICKS
+        self.prev_angle = None
+        self.total_angle = None
