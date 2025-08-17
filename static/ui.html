@@ -23,6 +23,8 @@
 
   main {
     height: 100vh;
+    max-width: 80rem;
+    margin: 0 auto;
     display: grid;
     grid-template-rows: 1fr auto;
     padding: 2rem;
@@ -74,10 +76,10 @@
   }
 
   #method {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: max-content;
     gap: 1rem;
-    align-items: flex-start;
-    flex-wrap: wrap;
   }
 
   .method-selection {

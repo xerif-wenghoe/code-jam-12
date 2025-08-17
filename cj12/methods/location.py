@@ -7,7 +7,7 @@ from cj12.methods import KeyReceiveCallback
 class LocationMethod:
     static_id = "location"
     name = "Location"
-    description = "A physical location on a map"
+    description = "A physical location"
 
     on_key_received: KeyReceiveCallback | None = None
 
