@@ -259,7 +259,7 @@ class ChessMethod:
 
     async def on_mouse_up(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
-        px, py = self.last_mousedown
+        px, py = self.last_mousedown  # pyright: ignore[reportGeneralTypeIssues]
         if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:  # noqa: SIM102
             if self.dragging is not None and (
                 board_square := self.mouse_on_board_square(mx, my)
