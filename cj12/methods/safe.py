@@ -3,6 +3,10 @@ from pyodide.ffi import create_proxy
 import math
 from textwrap import dedent
 
+from cj12.dom import add_event_listener, elem_by_id
+from cj12.methods import KeyReceiveCallback
+
+
 KNOB_RADIUS = 120
 OUTER_RADIUS = 200
 TICKS = 100
@@ -12,15 +16,23 @@ TICK_WIDTHS = (3, 2, 1)
 GREY_GRADIENT = (int("0x33", 16), int("0xAA", 16))
 KNOB_SLICES = 180
 TWO_PI = 2 * math.pi
+MOUSE_DEADZONE_RADIUS = 7
 
 
 class SafeMethod:
+
+    static_id = "safe"
+    name = "Safe"
+    description = "A safe combination"
+
+    on_key_received: KeyReceiveCallback | None = None
+
 
     @staticmethod
     def grey(frac):
         return "#" + f"{int(frac * GREY_GRADIENT[1] + (1 - frac) * GREY_GRADIENT[0]):02x}" * 3
 
-    def __init__(self):
+    async def setup (self) -> None:
 
         self.combination = []
         self.last_mousedown = None  # angle at which the mouse was clicked
@@ -28,47 +40,29 @@ class SafeMethod:
         self.prev_angle = None  # angle at which the mouse was last detected
         self.total_angle = None
 
-        style = document.createElement("style")
-        style.textContent = dedent("""
-        #container {
-            display: grid;
-            place-items: center;
-        }
-        #container canvas {
-            grid-area: 1 / 1;
-        }
-        """)
-        document.head.appendChild(style)
-        container = document.createElement("div")
-        container.id = "container"
-        self.div = document.createElement("div")
-        self.div.style.alignItems = "center"
-        self.div.appendChild(container)
-        document.body.appendChild(self.div)
-        self.knob_canvas = document.createElement("canvas")
-        self.knob_canvas.width = 2 * OUTER_RADIUS + 20
-        self.knob_canvas.height = 2 * OUTER_RADIUS + 40
-        self.knob_canvas.style.zIndex = 0
+        # self.div = elem_by_id("div")
+        # self.div.style.alignItems = "center"
+        # self.div.appendChild(container)
 
         self.offscreen_canvas = document.createElement("canvas")
-        self.offscreen_canvas.width = 2 * OUTER_RADIUS + 20
-        self.offscreen_canvas.height = 2 * OUTER_RADIUS + 40
+        self.offscreen_canvas.width = 600
+        self.offscreen_canvas.height = 400
         ctx = self.offscreen_canvas.getContext("2d")
         ctx.fillStyle = "#FFFFFF"
-        ctx.translate(self.ticks_canvas.width / 2, self.ticks_canvas.height / 2)
+        ctx.translate(self.offscreen_canvas.width / 2, self.offscreen_canvas.height / 2)
 
-        self.ticks_canvas = document.createElement("canvas")
-        self.ticks_canvas.width = 2 * OUTER_RADIUS + 20
-        self.ticks_canvas.height = 2 * OUTER_RADIUS + 40
-        self.ticks_canvas.style.zIndex = 1
-        self.ticks_canvas.getContext("2d").fillStyle = "#FFFFFF"
-        self.ticks_canvas.getContext("2d").translate(self.ticks_canvas.width / 2, self.ticks_canvas.height / 2)
-        container.appendChild(self.knob_canvas)
-        container.appendChild(self.ticks_canvas)
-        ctx = self.knob_canvas.getContext("2d")
+        self.dial_canvas = elem_by_id("dial-canvas")
+        self.dial_canvas.style.zIndex = 1
+        ctx = self.dial_canvas.getContext("2d")
         ctx.fillStyle = "#FFFFFF"
-        ctx.fillRect(0, 0, self.knob_canvas.width, self.knob_canvas.height)
-        ctx.translate(self.knob_canvas.width / 2, self.knob_canvas.height / 2)
+        ctx.translate(self.dial_canvas.width / 2, self.dial_canvas.height / 2)
+
+        self.static_canvas = elem_by_id("static-canvas")
+        self.static_canvas.style.zIndex = 0
+        ctx = self.static_canvas.getContext("2d")
+        ctx.fillRect(0, 0, self.static_canvas.width, self.static_canvas.height)
+        ctx.translate(self.static_canvas.width / 2, self.static_canvas.height / 2)
+        ctx.fillStyle = "#FFFFFF"
 
         # draw outer dial
         ctx.save()
@@ -112,12 +106,15 @@ class SafeMethod:
 
         self.prerender_ticks()
         self.draw_ticks()
-        self.create_output_div()
+        self.output_div = elem_by_id("output")
         self.log_output("Hello!")
 
-        for event, proxy in (("mousedown", self.on_mouse_down), ("mousemove", self.on_mouse_move), ("mouseup", self.on_mouse_up)):
-            self.ticks_canvas.addEventListener(event, create_proxy(proxy))
+        add_event_listener(self.dial_canvas, "mousedown", self.on_mouse_down)
+        add_event_listener(self.dial_canvas, "mousemove", self.on_mouse_move)
+        add_event_listener(self.dial_canvas, "mouseup", self.on_mouse_up)
 
+        self.btn_reset = elem_by_id("btn-reset")
+        add_event_listener(self.btn_reset, "click", self.reset_combination)
 
     def prerender_ticks(self):
         ctx = self.offscreen_canvas.getContext("2d")
@@ -130,7 +127,7 @@ class SafeMethod:
             ctx.rotate(TWO_PI * tick / TICKS)
             for t_type, interval in enumerate(TICK_INTERVALS):
                 if tick % interval == 0: break
-            ctx.roundRect(0, OUTER_RADIUS - 4 - TICK_LENGTHS[t_type], TICK_WIDTHS[t_type], TICK_LENGTHS[t_type], TICK_WIDTHS[t_type])
+            ctx.roundRect(-TICK_WIDTHS[t_type] / 2, -OUTER_RADIUS + 4, TICK_WIDTHS[t_type], TICK_LENGTHS[t_type], TICK_WIDTHS[t_type] / 2)
             ctx.fill()
             ctx.restore()
 
@@ -141,32 +138,29 @@ class SafeMethod:
             ctx.save()
             ctx.beginPath()
             ctx.rotate(TWO_PI * tick_numbering / TICKS)
-            ctx.fillText(str(tick_numbering), -1, -OUTER_RADIUS + 4 + TICK_LENGTHS[0] + 5)
+            ctx.fillText(str(tick_numbering), 0, -OUTER_RADIUS + 4 + TICK_LENGTHS[0] + 5)
             ctx.restore()
         ctx.restore()
 
 
     def draw_ticks(self, angle=0):
-        w, h = self.ticks_canvas.width, self.ticks_canvas.height
-        ctx = self.ticks_canvas.getContext("2d")
+        w, h = self.dial_canvas.width, self.dial_canvas.height
+        ctx = self.dial_canvas.getContext("2d")
         ctx.clearRect(-w / 2, -h / 2, w, h)
         ctx.save()
         ctx.rotate(angle)
         ctx.drawImage(self.offscreen_canvas, -w / 2, -h / 2)
         ctx.restore()
+        ctx.beginPath()
+        ctx.moveTo(-5, -OUTER_RADIUS - 5)
+        ctx.lineTo(5, -OUTER_RADIUS - 5)
+        ctx.lineTo(0, -OUTER_RADIUS + 25)
+        ctx.closePath()
+        ctx.fillStyle = "#EE0000"
+        ctx.strokeStyle = "#660000"
+        ctx.fill()
+        ctx.stroke()
 
-    def create_output_div(self):
-        # Create a div
-        self.output_div = document.createElement("div")
-        self.output_div.id = "output"
-        self.output_div.style.height = "100px"
-        self.output_div.style.border = "1px solid #ccc"
-        self.output_div.style.padding = "0.5em"
-        self.output_div.style.fontFamily = "monospace"
-        self.output_div.style.overflowY = "auto"
-
-        # Add it to the page
-        self.div.appendChild(self.output_div)
 
     # Define a function to log
     def log_output(self, msg):
@@ -175,7 +169,7 @@ class SafeMethod:
 
 
     def get_mouse_coords(self, event):
-        rect = self.ticks_canvas.getBoundingClientRect()
+        rect = self.dial_canvas.getBoundingClientRect()
         mx = event.clientX - rect.left - rect.width // 2 
         my = event.clientY - rect.top - rect.height // 2
         return mx, my
@@ -188,16 +182,16 @@ class SafeMethod:
         mx, my = self.get_mouse_coords(event)
         if mx ** 2 + my ** 2 > OUTER_RADIUS ** 2: return
         self.total_angle = 0
-        self.last_mousedown = math.atan2(my, mx)
+        self.last_mousedown = ((mx, my), math.atan2(my, mx))
 
 
     def on_mouse_move(self, event):
         mx, my = self.get_mouse_coords(event)
         if self.last_mousedown is None:
-            self.log_output(f"({mx, my}) angle: {math.atan2(my, mx)}")
+            # self.log_output(f"({mx, my}) angle: {math.atan2(my, mx)}")
             return
         curr_angle = math.atan2(my, mx)
-        d_theta = curr_angle - self.last_mousedown
+        d_theta = curr_angle - self.last_mousedown[1]
         diff = self.total_angle - d_theta
         pi_diffs = abs(diff) // math.pi
         if pi_diffs % 2 == 1: pi_diffs += 1
@@ -207,8 +201,10 @@ class SafeMethod:
 
 
     def on_mouse_up(self, event):
+        if self.last_mousedown is None: return
         mx, my = self.get_mouse_coords(event)
-        if self.last_mousedown != (mx, my):
+        px, py = self.last_mousedown[0]
+        if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS ** 2:
             self.register_knob_turn()
 
 
@@ -240,9 +236,21 @@ class SafeMethod:
 
 
     def register_knob_turn(self):
-        val = (1 if self.total_angle >= 0 else -1) * round(self.total_angle * TICKS / TWO_PI) 
+        val = (1 if self.total_angle >= 0 else -1) * round(abs(self.total_angle) * TICKS / TWO_PI) 
         self.combination.append(val)
+        self.log_output(f"{self.combination}")
         self.last_mousedown = None
         self.last_dial_value = (self.last_dial_value + val) % TICKS
+        self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
+
+
+    def reset_combination(self, _event: object):
+        self.last_mousedown = None
+        self.last_dial_value = 0
+        self.draw_ticks()
+        self.prev_angle = None
+        self.total_angle = None
+        self.combination = []
+        self.log_output(f"{self.combination}")
