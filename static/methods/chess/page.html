@@ -1,2 +1,25 @@
-<canvas id="background-canvas" width="600" height="400"></canvas>
-<canvas id="piece-canvas" width="600" height="400"></canvas>
+<button id="btn-clear-board">Clear board</button>
+<button id="btn-initial-position">Initial position</button>
+
+<div id="canvasses">
+  <canvas id="background-canvas" width="600" height="400"></canvas>
+  <canvas id="piece-canvas" width="600" height="400"></canvas>
+</div>
+
+<style>
+  #method {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+  }
+
+  #canvasses {
+    grid-column: span 3;
+    display: grid;
+    place-items: center;
+    & > canvas {
+      grid-area: 1 / 1;
+    }
+  }
+</style>

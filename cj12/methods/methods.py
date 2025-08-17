@@ -7,6 +7,8 @@ from cj12.methods.location import LocationMethod
 from cj12.methods.method import Method
 from cj12.methods.password import PasswordMethod
 
+methods: list[Method] = [PasswordMethod(), LocationMethod(), ChessMethod()]
+
 
 class Methods:
     def __init__(self, on_key_received: KeyReceiveCallback) -> None:
@@ -22,8 +24,6 @@ class Methods:
 
     async def register_selections(self) -> None:
         self._container.innerHTML = ""
-
-        methods: set[Method] = {PasswordMethod(), LocationMethod(), ChessMethod()}
 
         for method in methods:
 

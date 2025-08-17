@@ -17,28 +17,24 @@ class ChessMethod:
     description = "A certain chess position"
 
     on_key_received: KeyReceiveCallback | None = None
+    chessboard: list[list[str | None]]
 
     async def setup(self) -> None:
         self.chesspieces = None
         self.chessboard = [[None] * 8 for _ in range(8)]
         self.dragging = None
         self.last_mousedown = None
+
         self.canvas_board: Any = elem_by_id("background-canvas")
         self.canvas_pieces: Any = elem_by_id("piece-canvas")
-        for elem, z in ((self.canvas_board, 0), (self.canvas_pieces, 1)):
-            elem.width = 600
-            elem.height = 400
-            elem.style.position = "absolute"
-            elem.style.left = "50%"
-            elem.style.top = "50%"
-            elem.style.transform = "translate(-50%, -50%)"
-            elem.style.zIndex = z
+
         self.ctx_board = self.canvas_board.getContext("2d")
         self.ctx_board.translate(
             self.canvas_board.width / 2,
             self.canvas_board.height / 2,
         )
         self.ctx_board.imageSmoothingEnabled = False
+
         self.ctx_pieces = self.canvas_pieces.getContext("2d")
         self.ctx_pieces.imageSmoothingEnabled = False
         self.ctx_pieces.translate(
@@ -50,6 +46,12 @@ class ChessMethod:
         add_event_listener(self.canvas_pieces, "mouseup", self.on_mouse_up)
         add_event_listener(self.canvas_pieces, "mousemove", self.on_mouse_move)
 
+        # Control buttons and handlers
+        self.btn_clear: Any = elem_by_id("btn-clear-board")
+        self.btn_initial: Any = elem_by_id("btn-initial-position")
+        add_event_listener(self.btn_clear, "click", self.on_clear_board)
+        add_event_listener(self.btn_initial, "click", self.on_initial_position)
+
         await self.load_chesspieces()
 
     async def load_chesspieces(self) -> None:
@@ -59,7 +61,7 @@ class ChessMethod:
                 _reject: Callable[[object], None],
             ) -> None:
                 img = window.Image.new()  # pyright: ignore[reportAttributeAccessIssue]
-                img.onload = lambda *_, __=img: resolve(__)
+                img.onload = lambda *_, img=img: resolve(img)
                 img.src = src
 
             return Promise.new(executor)  # pyright: ignore[reportAttributeAccessIssue]
@@ -81,6 +83,69 @@ class ChessMethod:
 
         # Draw the initial board
         self.draw_board()
+        # Start with the standard initial position for convenience
+        self.set_initial_position()
+        self.draw_pieces_on_board(0, 0)
+
+    # --- Controls ---
+    def clear_board(self) -> None:
+        self.chessboard = [[None] * 8 for _ in range(8)]
+        self.dragging = None
+        # Redraw pieces layer cleared
+        self.ctx_pieces.clearRect(
+            -self.canvas_pieces.width / 2,
+            -self.canvas_pieces.height / 2,
+            self.canvas_pieces.width,
+            self.canvas_pieces.height,
+        )
+        self.draw_pieces_on_board(0, 0)
+
+    async def on_clear_board(self, _event: object) -> None:
+        self.clear_board()
+        if self.on_key_received is not None:
+            await self.on_key_received(str(self.chessboard).encode())
+
+    def set_initial_position(self) -> None:
+        # Use the piece names already loaded in pickzones/chesspieces.
+        # Expected: W_King, W_Queen, W_Rook, W_Bishop, W_Knight, W_Pawn
+        # Board indices: row 0 at top (black side), row 7 at bottom (white side)
+        w = {
+            "K": "W_King",
+            "Q": "W_Queen",
+            "R": "W_Rook",
+            "B": "W_Bishop",
+            "N": "W_Knight",
+            "P": "W_Pawn",
+        }
+        b = {
+            "K": "B_King",
+            "Q": "B_Queen",
+            "R": "B_Rook",
+            "B": "B_Bishop",
+            "N": "B_Knight",
+            "P": "B_Pawn",
+        }
+        self.chessboard = [[None] * 8 for _ in range(8)]
+        # Black back rank (row 0)
+        for c, pc in enumerate(("R", "N", "B", "Q", "K", "B", "N", "R")):
+            self.chessboard[0][c] = b[pc]
+        # Black pawns (row 1)
+        for c in range(8):
+            self.chessboard[1][c] = b["P"]
+        # Empty rows 2..5 already None
+        # White pawns (row 6)
+        for c in range(8):
+            self.chessboard[6][c] = w["P"]
+        # White back rank (row 7)
+        for c, pc in enumerate(("R", "N", "B", "Q", "K", "B", "N", "R")):
+            self.chessboard[7][c] = w[pc]
+
+    async def on_initial_position(self, _event: object) -> None:
+        self.set_initial_position()
+        # Redraw
+        self.draw_pieces_on_board(0, 0)
+        if self.on_key_received is not None:
+            await self.on_key_received(str(self.chessboard).encode())
 
     def draw_board(self) -> None:
         if self.chesspieces is None:
