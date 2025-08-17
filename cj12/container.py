@@ -14,17 +14,19 @@ MAGIC = b"SDET"
 class Container:
     method: int
     original_filename: str
+    data_hash: bytes
     data: bytes
 
     def __bytes__(self) -> bytes:
         filename_bytes = self.original_filename.encode("utf-8")
 
         return MAGIC + struct.pack(
-            f"<III{len(filename_bytes)}s{len(self.data)}s",
+            f"<III{len(filename_bytes)}s32s{len(self.data)}s",
             int(self.method),
             len(filename_bytes),
             len(self.data),
             filename_bytes,
+            self.data_hash,
             self.data,
         )
 
@@ -47,6 +49,9 @@ class Container:
         filename = filename_bytes.decode("utf-8")
         offset += filename_length
 
+        data_hash = struct.unpack("32s", raw[offset : offset + 32])[0]
+        offset += 32
+
         data = struct.unpack(
             f"<{data_length}s",
             raw[offset : offset + data_length],
@@ -55,5 +60,6 @@ class Container:
         return Container(
             method=method,
             original_filename=filename,
+            data_hash=data_hash,
             data=data,
         )

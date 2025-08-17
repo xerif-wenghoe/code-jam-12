@@ -1,7 +1,7 @@
 from contextlib import suppress
 from hashlib import sha256
 
-from js import URL, Blob, document
+from js import URL, Blob, alert, document
 from pyodide.ffi import to_js
 
 from cj12.aes import decrypt, encrypt
@@ -71,6 +71,7 @@ class App:
         container = Container(
             method=self._methods.current.byte,
             original_filename=self._filename,
+            data_hash=sha256(data).digest(),
             data=encrypt(data, sha256(key).digest()),
         )
 
@@ -83,6 +84,12 @@ class App:
         _, key = self._ensure_data_and_key()
 
         decrypted = decrypt(self._container.data, sha256(key).digest())
+        decrypted_hash = sha256(decrypted).digest()
+
+        if decrypted_hash != self._container.data_hash:
+            alert("Incorrect key")
+            return
+
         self._download_file(decrypted, self._container.original_filename)
 
     def _download_file(self, data: bytes, filename: str) -> None:
