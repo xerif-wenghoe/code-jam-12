@@ -1,11 +1,23 @@
+from typing import Protocol
+
 from js import document
 
 from cj12.dom import add_event_listener, elem_by_id, fetch_text
 from cj12.methods import KeyReceiveCallback
 from cj12.methods.chess import ChessMethod
 from cj12.methods.location import LocationMethod
-from cj12.methods.method import Method
 from cj12.methods.password import PasswordMethod
+
+
+class Method(Protocol):
+    static_id: str
+    name: str
+    description: str
+
+    on_key_received: KeyReceiveCallback | None = None
+
+    async def setup(self) -> None: ...
+
 
 methods: list[Method] = [PasswordMethod(), LocationMethod(), ChessMethod()]
 
