@@ -1,14 +1,13 @@
-from typing import TYPE_CHECKING
+from typing import Protocol
 
-if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
+from cj12.methods import KeyReceiveCallback
 
 
-class Method:
-    def __init__(self, *, static_id: str, name: str, description: str) -> None:
-        self.static_id = static_id
-        self.name = name
-        self.description = description
-        self.on_key_received: Callable[[bytes | None], Awaitable[None]] | None = None
+class Method(Protocol):
+    static_id: str
+    name: str
+    description: str
+
+    on_key_received: KeyReceiveCallback | None = None
 
     async def setup(self) -> None: ...

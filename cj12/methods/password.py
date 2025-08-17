@@ -1,16 +1,15 @@
 from typing import Any
 
 from cj12.dom import InputElement, add_event_listener, elem_by_id
-from cj12.methods.method import Method
+from cj12.methods import KeyReceiveCallback
 
 
-class PasswordMethod(Method):
-    def __init__(self) -> None:
-        super().__init__(
-            static_id="password",
-            name="Password",
-            description="Boring old password (deprecated) (please don't use)",
-        )
+class PasswordMethod:
+    static_id = "password"
+    name = "Password"
+    description = "Plain password (deprecated)"
+
+    on_key_received: KeyReceiveCallback | None = None
 
     async def setup(self) -> None:
         self._input = elem_by_id("password-input", InputElement)
