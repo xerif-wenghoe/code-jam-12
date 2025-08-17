@@ -1,11 +1,9 @@
-from js import document, Image, Promise
-from pyodide.ffi import create_proxy
 import math
-from textwrap import dedent
+
+from js import document
 
 from cj12.dom import add_event_listener, elem_by_id
 from cj12.methods import KeyReceiveCallback
-
 
 KNOB_RADIUS = 120
 OUTER_RADIUS = 200
@@ -20,20 +18,21 @@ MOUSE_DEADZONE_RADIUS = 7
 
 
 class SafeMethod:
-
+    byte = 0x04
     static_id = "safe"
     name = "Safe"
     description = "A safe combination"
 
     on_key_received: KeyReceiveCallback | None = None
 
-
     @staticmethod
     def grey(frac):
-        return "#" + f"{int(frac * GREY_GRADIENT[1] + (1 - frac) * GREY_GRADIENT[0]):02x}" * 3
+        return (
+            "#"
+            + f"{int(frac * GREY_GRADIENT[1] + (1 - frac) * GREY_GRADIENT[0]):02x}" * 3
+        )
 
-    async def setup (self) -> None:
-
+    async def setup(self) -> None:
         self.combination = []
         self.last_mousedown = None  # angle at which the mouse was clicked
         self.last_dial_value = 0  # value at which the dial was previously left at
@@ -78,7 +77,7 @@ class SafeMethod:
         ctx.fillStyle = radial_grad
         ctx.fill()
         ctx.restore()
-        
+
         # draw knob
         d_theta = TWO_PI / KNOB_SLICES
         for slc in range(KNOB_SLICES):
@@ -91,11 +90,13 @@ class SafeMethod:
             ctx.arc(0, 0, KNOB_RADIUS + (slc % 2) * 2, 0, d_theta * 1.005)
             ctx.closePath()
             sin2x, cos4x = math.sin(2 * theta), math.cos(4 * theta)
-            ctx.strokeStyle = ctx.fillStyle = SafeMethod.grey(1 - ((sin2x + cos4x) ** 2) / 4)
+            ctx.strokeStyle = ctx.fillStyle = SafeMethod.grey(
+                1 - ((sin2x + cos4x) ** 2) / 4,
+            )
             ctx.stroke()
             ctx.fill()
             ctx.restore()
-        
+
         ctx.beginPath()
         ctx.moveTo(KNOB_RADIUS - 5, 0)
         ctx.arc(0, 0, KNOB_RADIUS - 5, 0, TWO_PI)
@@ -126,8 +127,15 @@ class SafeMethod:
             ctx.beginPath()
             ctx.rotate(TWO_PI * tick / TICKS)
             for t_type, interval in enumerate(TICK_INTERVALS):
-                if tick % interval == 0: break
-            ctx.roundRect(-TICK_WIDTHS[t_type] / 2, -OUTER_RADIUS + 4, TICK_WIDTHS[t_type], TICK_LENGTHS[t_type], TICK_WIDTHS[t_type] / 2)
+                if tick % interval == 0:
+                    break
+            ctx.roundRect(
+                -TICK_WIDTHS[t_type] / 2,
+                -OUTER_RADIUS + 4,
+                TICK_WIDTHS[t_type],
+                TICK_LENGTHS[t_type],
+                TICK_WIDTHS[t_type] / 2,
+            )
             ctx.fill()
             ctx.restore()
 
@@ -138,10 +146,13 @@ class SafeMethod:
             ctx.save()
             ctx.beginPath()
             ctx.rotate(TWO_PI * tick_numbering / TICKS)
-            ctx.fillText(str(tick_numbering), 0, -OUTER_RADIUS + 4 + TICK_LENGTHS[0] + 5)
+            ctx.fillText(
+                str(tick_numbering),
+                0,
+                -OUTER_RADIUS + 4 + TICK_LENGTHS[0] + 5,
+            )
             ctx.restore()
         ctx.restore()
-
 
     def draw_ticks(self, angle=0):
         w, h = self.dial_canvas.width, self.dial_canvas.height
@@ -161,29 +172,26 @@ class SafeMethod:
         ctx.fill()
         ctx.stroke()
 
-
     # Define a function to log
     def log_output(self, msg):
         self.output_div.innerHTML += msg + "<br>"
         self.output_div.scrollTop = self.output_div.scrollHeight  # auto-scroll
 
-
     def get_mouse_coords(self, event):
         rect = self.dial_canvas.getBoundingClientRect()
-        mx = event.clientX - rect.left - rect.width // 2 
+        mx = event.clientX - rect.left - rect.width // 2
         my = event.clientY - rect.top - rect.height // 2
         return mx, my
-
 
     def on_mouse_down(self, event):
         if self.total_angle is not None:
             self.register_knob_turn()
             return
         mx, my = self.get_mouse_coords(event)
-        if mx ** 2 + my ** 2 > OUTER_RADIUS ** 2: return
+        if mx**2 + my**2 > OUTER_RADIUS**2:
+            return
         self.total_angle = 0
         self.last_mousedown = ((mx, my), math.atan2(my, mx))
-
 
     def on_mouse_move(self, event):
         mx, my = self.get_mouse_coords(event)
@@ -194,19 +202,19 @@ class SafeMethod:
         d_theta = curr_angle - self.last_mousedown[1]
         diff = self.total_angle - d_theta
         pi_diffs = abs(diff) // math.pi
-        if pi_diffs % 2 == 1: pi_diffs += 1
+        if pi_diffs % 2 == 1:
+            pi_diffs += 1
         self.total_angle = d_theta + (-1 if diff < 0 else 1) * pi_diffs * math.pi
         # self.log_output(f"Total: {self.total_angle}")
         self.draw_ticks(self.total_angle + self.last_dial_value * TWO_PI / TICKS)
 
-
     def on_mouse_up(self, event):
-        if self.last_mousedown is None: return
+        if self.last_mousedown is None:
+            return
         mx, my = self.get_mouse_coords(event)
         px, py = self.last_mousedown[0]
-        if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS ** 2:
+        if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:
             self.register_knob_turn()
-
 
     def change_knob_type(self, num):
         global TICKS, TICK_INTERVALS
@@ -224,7 +232,9 @@ class SafeMethod:
                 TICKS = 12
                 TICK_INTERVALS = (3, 3, 1)
             case _:
-                raise ValueError(f"Invalid knob type ({num})! Must be 100, 72, 64 or 12.")
+                raise ValueError(
+                    f"Invalid knob type ({num})! Must be 100, 72, 64 or 12.",
+                )
 
         self.combination = []
         self.last_mousedown = None  # angle at which the mouse was clicked
@@ -234,9 +244,10 @@ class SafeMethod:
         self.prerender_ticks()
         self.draw_ticks()
 
-
     def register_knob_turn(self):
-        val = (1 if self.total_angle >= 0 else -1) * round(abs(self.total_angle) * TICKS / TWO_PI) 
+        val = (1 if self.total_angle >= 0 else -1) * round(
+            abs(self.total_angle) * TICKS / TWO_PI,
+        )
         self.combination.append(val)
         self.log_output(f"{self.combination}")
         self.last_mousedown = None
@@ -244,7 +255,6 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
-
 
     def reset_combination(self, _event: object):
         self.last_mousedown = None
