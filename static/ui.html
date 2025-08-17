@@ -1,3 +1,15 @@
+<main>
+  <section id="method"></section>
+
+  <section id="action-bar">
+    <input id="file-input" type="file" />
+    <label for="file-input" id="dropzone">Select a file</label>
+
+    <button id="encrypt-button" disabled>Encrypt</button>
+    <button id="decrypt-button" disabled>Decrypt</button>
+  </section>
+</main>
+
 <style>
   * {
     margin: 0;
@@ -75,10 +87,10 @@
     display: none;
   }
 
-  #method {
+  #method-selections {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: max-content;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    grid-auto-rows: minmax(auto, 8rem);
     gap: 1rem;
   }
 
@@ -97,6 +109,7 @@
       grid-area: img;
       width: 5rem;
       aspect-ratio: 1;
+      align-self: center;
     }
 
     & > h2 {
@@ -109,15 +122,3 @@
     }
   }
 </style>
-
-<main>
-  <section id="method"></section>
-
-  <section id="action-bar">
-    <input id="file-input" type="file" />
-    <label for="file-input" id="dropzone">Select a file</label>
-
-    <button id="encrypt-button" disabled>Encrypt</button>
-    <button id="decrypt-button" disabled>Decrypt</button>
-  </section>
-</main>

@@ -23,7 +23,8 @@ class Methods:
         return self._html_cache[method.static_id]
 
     async def register_selections(self) -> None:
-        self._container.innerHTML = ""
+        self._container.innerHTML = '<div id="method-selections"></div>'
+        selections_container = elem_by_id("method-selections")
 
         for method in methods:
 
@@ -48,4 +49,4 @@ class Methods:
                 <p>{method.description}</p>
             """
             add_event_listener(btn, "click", on_select)
-            self._container.appendChild(btn)
+            selections_container.appendChild(btn)
