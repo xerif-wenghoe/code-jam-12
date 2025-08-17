@@ -21,7 +21,7 @@ class Method(Protocol):
     async def setup(self) -> None: ...
 
 
-methods: list[Method] = [PasswordMethod(), ChessMethod(), LocationMethod()]
+methods: list[Method] = [PasswordMethod(), ChessMethod(), LocationMethod(), SafeMethod()]
 
 
 class Methods:
