@@ -6,10 +6,10 @@ from cj12.dom import add_event_listener, elem_by_id, fetch_text
 from cj12.methods import KeyReceiveCallback
 from cj12.methods.chess import ChessMethod
 from cj12.methods.location import LocationMethod
-from cj12.methods.password import PasswordMethod
-from cj12.methods.safe import SafeMethod
-from cj12.methods.pattern_lock import PatternLockMethod
 from cj12.methods.music import MusicMethod
+from cj12.methods.password import PasswordMethod
+from cj12.methods.pattern_lock import PatternLockMethod
+from cj12.methods.safe import SafeMethod
 
 
 class Method(Protocol):
@@ -29,7 +29,7 @@ methods: list[Method] = [
     LocationMethod(),
     SafeMethod(),
     PatternLockMethod(),
-    MusicMethod()
+    MusicMethod(),
 ]
 
 

@@ -14,7 +14,7 @@ dev = [
 
 [tool.ruff]
 lint.select = ["ALL"]
-lint.ignore = ["D", "ANN401"]
+lint.ignore = ["D", "ANN401", "TD002", "TD003", "FIX002"]
 lint.per-file-ignores = { "tests/**/*.py" = ["S101", "PLR2004"] }
 
 [tool.pyright]
