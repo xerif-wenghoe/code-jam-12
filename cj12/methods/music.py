@@ -1,12 +1,6 @@
 from collections.abc import Callable
-<<<<<<< HEAD
-from typing import Any
 
-from js import Promise, window, setTimeout, clearTimeout
-=======
->>>>>>> 64999335a7383b5408805be71bd34847e2507237
-
-from js import Promise, setTimeout, window
+from js import Promise, clearTimeout, setTimeout, window
 from pyodide.ffi import create_proxy
 
 from cj12.dom import add_event_listener, elem_by_id
@@ -68,7 +62,7 @@ class MusicMethod:
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
 
-        self.timeoutCalls = []
+        self.timeout_calls = []
 
         self._draw_grid()
 
@@ -111,24 +105,13 @@ class MusicMethod:
 
     # Main event loop, calls self
     # TODO: REFACTOR setTimeout
-<<<<<<< HEAD
-    def _tick(self):
-        if self.playing:
-            self._play_notes(self.grid[self.currentColumn])
-            self._draw_grid()
-            self.currentColumn = (self.currentColumn + 1) % self.columns
-            print(self.interval)
-            self.timeoutCalls.append(setTimeout(self.tick_proxy, self.interval))
-        
-=======
     def _tick(self) -> None:
         if not self.playing:
             return
         self._play_notes(self.grid[self.currentColumn])
         self._draw_grid()
         self.currentColumn = (self.currentColumn + 1) % self.columns
-        setTimeout(self.tick_proxy, self.interval)
->>>>>>> 64999335a7383b5408805be71bd34847e2507237
+        self.timeout_calls.append(setTimeout(self.tick_proxy, self.interval))
 
     def _play_note(self, note_name: str) -> None:
         notefound = self.notes[f"Piano.{note_name}"]
@@ -145,40 +128,26 @@ class MusicMethod:
         click_x = event.clientX - rect_canvas.left
         click_y = event.clientY - rect_canvas.top
 
-<<<<<<< HEAD
-        columnClicked = int(click_x/self.boxWidth)    
-        rowClicked = int(click_y/self.boxHeight) 
-        try:
-            self.grid[columnClicked][rowClicked] *= -1
-            print(f"p{rowClicked}")
-            if self.grid[columnClicked][rowClicked] == 1:
-                self._play_note(f"{self.rows-rowClicked+7-1}")
-        except:
-            print("errror")
-            pass
-        
-=======
         column_clicked = int(click_x / self.box_width)
         row_clicked = int(click_y / self.box_height)
 
         self.grid[column_clicked][row_clicked] *= -1
         if self.grid[column_clicked][row_clicked] == 1:
             self._play_note(f"{self.rows - row_clicked + 7 - 1}")
->>>>>>> 64999335a7383b5408805be71bd34847e2507237
         self._draw_grid()
 
     # look into intervalevents
     def _toggle_play(self, _event: object) -> None:
         self.playing = not self.playing
-        for timeoutCall in self.timeoutCalls:
-            clearTimeout(timeoutCall)
+        for timeout_call in self.timeout_calls:
+            clearTimeout(timeout_call)
         if self.playing:
             self.playButton.innerText = "⏸"
             self.currentColumn = 0
             self._tick()
         else:
             self.playButton.innerText = "▶"
-        
+
         self._draw_grid()
 
     def _change_bpm(self, event: object) -> None:
