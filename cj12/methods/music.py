@@ -144,8 +144,6 @@ class MusicMethod:
                 self._play_note(f"{self.rows - number + 7 - 1}")  # make more clear
 
     async def _update_on_click(self, event: object) -> None:
-        key = self._flatten_list()
-        await self.on_key_received(key.encode())
         rect_canvas = self.canvas.getBoundingClientRect()
         click_x = event.clientX - rect_canvas.left
         click_y = event.clientY - rect_canvas.top
@@ -157,6 +155,8 @@ class MusicMethod:
         if self.grid[column_clicked][row_clicked] == 1:
             self._play_note(f"{self.rows - row_clicked + 7 - 1}")
         self._draw_grid()
+        key = self._flatten_list()
+        await self.on_key_received(key.encode())
 
     def _flatten_list(self) -> str:
         return "".join(
