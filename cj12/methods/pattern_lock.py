@@ -24,7 +24,7 @@ class PatternLockMethod:
     on_key_received: KeyReceiveCallback | None = None
 
     dot_radius: int = 15
-    lock_grid_length: int = 100
+    lock_grid_length: int = 300
     dimension: int = 3 # n by n dots
 
 
@@ -40,7 +40,7 @@ class PatternLockMethod:
         self.connected_nodes: list[list[Node]] = []
 
         self.canvas = elem_by_id("grid")
-        self.canvas.width = self.canvas.height = self.lock_grid_length * self.dimension
+        self.canvas.width = self.canvas.height = self.lock_grid_length
         self.ctx = self.canvas.getContext("2d")
 
         self.generate_nodes()
@@ -50,11 +50,12 @@ class PatternLockMethod:
         """
         Generate all the dots
         """
+        node_length = self.lock_grid_length / self.dimension
         for row in range(self.dimension):
             for col in range(self.dimension):
                 self.node_list.append(
-                    Node(int(col * self.lock_grid_length + self.lock_grid_length/2), 
-                         int(row * self.lock_grid_length + self.lock_grid_length/2), 
+                    Node(int(col * node_length + node_length / 2), 
+                         int(row * node_length + node_length / 2), 
                          False)
                     )
 
