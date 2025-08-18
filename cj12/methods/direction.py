@@ -297,7 +297,7 @@ class DirectionLockMethod:
 
             self.draw_knob()
 
-    def on_mouse_up(self, event: object) -> None:
+    async def on_mouse_up(self, event: object) -> None:
         """Handle mouse up event"""
         if not self.is_mouse_down:
             return
@@ -328,7 +328,7 @@ class DirectionLockMethod:
         # Send sequence if we have one
         if self.sequence and self.on_key_received is not None:
             sequence_str = ",".join(self.sequence)
-            self.on_key_received(sequence_str.encode())
+            await self.on_key_received(sequence_str.encode())
 
     def update_output(self) -> None:
         """Update the text area with current sequence"""
