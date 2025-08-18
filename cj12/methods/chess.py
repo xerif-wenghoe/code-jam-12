@@ -47,6 +47,7 @@ class ChessMethod:
         add_event_listener(self.canvas_pieces, "mousedown", self.on_mouse_down)
         add_event_listener(self.canvas_pieces, "mouseup", self.on_mouse_up)
         add_event_listener(self.canvas_pieces, "mousemove", self.on_mouse_move)
+        add_event_listener(self.canvas_pieces, "dblclick", self.on_double_click)
 
         # Control buttons and handlers
         self.btn_clear: Any = elem_by_id("btn-clear-board")
@@ -270,3 +271,18 @@ class ChessMethod:
                 if self.on_key_received is not None:
                     await self.on_key_received(str(self.chessboard).encode())
                 self.draw_pieces_on_board(mx, my)
+
+    async def on_double_click(self, event: object) -> None:
+        mx, my = self.get_mouse_coords(event)
+
+        if (board_square := self.mouse_on_board_square(mx, my)) is None:
+            return
+
+        r, c = board_square
+        if self.chessboard[r][c] is None:
+            return
+
+        self.chessboard[r][c] = None
+        self.draw_pieces_on_board(mx, my)
+        if self.on_key_received is not None:
+            await self.on_key_received(str(self.chessboard).encode())
