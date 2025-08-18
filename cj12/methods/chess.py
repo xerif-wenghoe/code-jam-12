@@ -47,15 +47,22 @@ class ChessMethod:
         add_event_listener(self.canvas_pieces, "mousedown", self.on_mouse_down)
         add_event_listener(self.canvas_pieces, "mouseup", self.on_mouse_up)
         add_event_listener(self.canvas_pieces, "mousemove", self.on_mouse_move)
-        add_event_listener(self.canvas_pieces, "dblclick", self.on_double_click)
+        # add_event_listener(self.canvas_pieces, "dblclick", self.on_double_click)
 
         # Control buttons and handlers
         self.btn_clear: Any = elem_by_id("btn-clear-board")
         self.btn_initial: Any = elem_by_id("btn-initial-position")
         add_event_listener(self.btn_clear, "click", self.on_clear_board)
         add_event_listener(self.btn_initial, "click", self.on_initial_position)
-
         await self.load_chesspieces()
+
+        # Draw the initial board
+        self.draw_board()
+        # Start with the standard initial position for convenience
+        self.set_initial_position()
+        self.draw_pieces_on_board(0, 0)
+        await self.update_key()
+
 
     async def load_chesspieces(self) -> None:
         def load_image(src: str) -> object:
@@ -84,11 +91,6 @@ class ChessMethod:
         self.piece_width = images[0].width * PIECE_SCALE
         self.piece_height = images[0].height * PIECE_SCALE
 
-        # Draw the initial board
-        self.draw_board()
-        # Start with the standard initial position for convenience
-        self.set_initial_position()
-        self.draw_pieces_on_board(0, 0)
 
     # --- Controls ---
     def clear_board(self) -> None:
@@ -105,8 +107,7 @@ class ChessMethod:
 
     async def on_clear_board(self, _event: object) -> None:
         self.clear_board()
-        if self.on_key_received is not None:
-            await self.on_key_received(str(self.chessboard).encode())
+        await self.update_key()
 
     def set_initial_position(self) -> None:
         # Use the piece names already loaded in pickzones/chesspieces.
@@ -147,15 +148,14 @@ class ChessMethod:
         self.set_initial_position()
         # Redraw
         self.draw_pieces_on_board(0, 0)
-        if self.on_key_received is not None:
-            await self.on_key_received(str(self.chessboard).encode())
+        await self.update_key()
 
     def draw_board(self) -> None:
         if self.chesspieces is None:
             return
-        board, ctx, ssz = self.canvas_board, self.ctx_board, SQUARE_SIZE
-        ctx.strokeStyle = "#008800"
-        ctx.strokeRect(-board.width / 2, -board.height / 2, board.width, board.height)
+        ctx, ssz = self.ctx_board, SQUARE_SIZE
+        # ctx.strokeStyle = "#008800"
+        # ctx.strokeRect(-board.width / 2, -board.height / 2, board.width, board.height)
         ctx.fillStyle = "#FBDEBD"
         ctx.fillRect(-4 * ssz - 5, -4 * ssz - 5, 8 * ssz + 10, 8 * ssz + 10)
         ctx.clearRect(-4 * ssz - 2, -4 * ssz - 2, 8 * ssz + 4, 8 * ssz + 4)
@@ -233,12 +233,13 @@ class ChessMethod:
         r, c = map(lambda x: int(x // SQUARE_SIZE) + 4, (my, mx))  # noqa: C417
         return (r, c) if r in range(8) and c in range(8) else None
 
-    def on_mouse_down(self, event: object) -> None:
+    async def on_mouse_down(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
         if board_square := self.mouse_on_board_square(mx, my):
             r, c = board_square
             self.dragging, self.chessboard[r][c] = self.chessboard[r][c], self.dragging
             self.last_mousedown = mx, my
+            await self.update_key()
         else:
             for piece in self.pickzones:
                 if (
@@ -266,11 +267,10 @@ class ChessMethod:
                 board_square := self.mouse_on_board_square(mx, my)
             ):
                 r, c = board_square
-                self.chessboard[r][c] = self.dragging
-                self.dragging = None
-                if self.on_key_received is not None:
-                    await self.on_key_received(str(self.chessboard).encode())
+                self.chessboard[r][c], self.dragging = self.dragging, self.chessboard[r][c]
                 self.draw_pieces_on_board(mx, my)
+                await self.update_key()
+
 
     async def on_double_click(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
@@ -284,5 +284,25 @@ class ChessMethod:
 
         self.chessboard[r][c] = None
         self.draw_pieces_on_board(mx, my)
-        if self.on_key_received is not None:
-            await self.on_key_received(str(self.chessboard).encode())
+        await self.update_key()
+
+
+    async def update_key(self) -> None:
+        conversion = {
+            None: 0,
+            "W_King": 1,
+            "W_Queen": 2,
+            "W_Rook": 3,
+            "W_Bishop": 4,
+            "W_Knight": 5,
+            "W_Pawn": 6,
+            "B_King": 7,
+            "B_Queen": 8,
+            "B_Rook": 9,
+            "B_Bishop": 10,
+            "B_Knight": 11,
+            "B_Pawn": 12
+        }
+        key = [conversion[piece] for row in self.chessboard for piece in row]
+        # print(key)  # debug
+        await self.on_key_received(bytes(key))

@@ -229,23 +229,28 @@ class SafeMethod:
         self.prerender_ticks()
         self.reset_combination(event)
 
-    def register_knob_turn(self) -> None:
+    async def register_knob_turn(self) -> None:
         val = (1 if self.total_angle >= 0 else -1) * round(
             abs(self.total_angle) * TICKS / TWO_PI,
         )
         self.combination.append(val)
-        self.log_output(f"{self.combination}")
         self.last_mousedown = None
         self.last_dial_value = (self.last_dial_value + val) % TICKS
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
+        # print(self.combination)
+        if self.on_key_received is not None:
+            await self.on_key_received(bytes(self.combination))
 
-    def reset_combination(self, _event: object) -> None:
+
+    async def reset_combination(self, _event: object) -> None:
         self.last_mousedown = None
         self.last_dial_value = 0
         self.draw_ticks()
         self.prev_angle = None
         self.total_angle = None
         self.combination = []
-        self.log_output(f"{self.combination}")
+        # print(self.combination)
+        if self.on_key_received is not None:
+            await self.on_key_received(bytes(self.combination))
