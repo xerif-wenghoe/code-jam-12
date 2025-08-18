@@ -22,8 +22,8 @@ class AES:
     """
 
     # Set up S-box.
-    # The S-box is a crucial step in the AES algorithm. Its purpose to act as a lookup table
-    # to replace bytes with other bytes. This introduces confusion.
+    # The S-box is a crucial step in the AES algorithm. Its purpose to act as a lookup
+    # table to replace bytes with other bytes. This introduces confusion.
     # fmt: off
     sbox = np.array([
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
@@ -66,8 +66,8 @@ class AES:
     for i in range(len(sbox)):
         sbox_inv[sbox[i]] = i
 
-    # During the creation of the round keys, the Rcon array is used to add a certain value to the key each
-    # round, to produce the key for the next round.
+    # During the creation of the round keys, the Rcon array is used to add a certain
+    # value to the key each round, to produce the key for the next round.
     Rcon = np.array(
         [
             [0x01, 0x00, 0x00, 0x00],
@@ -109,12 +109,13 @@ class AES:
             result ^= 0x1B
         return result
 
-
-    # These 2 methods act on each separate column of the data array. Values are 'mixed' by multplying the
-    # matrix [[2, 3, 1, 1],
-    #         [1, 2, 3, 1],
-    #         [1, 1, 2, 3],
-    #         [3, 1, 1, 2]] (under GF(2^8))
+    # These 2 methods act on each separate column of the data array. Values are 'mixed'
+    # by multplying the matrix:
+    #
+    #   [[2, 3, 1, 1],
+    #    [1, 2, 3, 1],  # noqa: ERA001
+    #    [1, 1, 2, 3],  # noqa: ERA001
+    #    [3, 1, 1, 2]] (under GF(2^8))
     @staticmethod
     def mix_column(col: np.ndarray) -> np.ndarray:
         x2 = AES.mul2
