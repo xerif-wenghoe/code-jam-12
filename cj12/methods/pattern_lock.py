@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from math import pi
 
-from js import console
-
-from cj12.methods import KeyReceiveCallback
 from cj12.dom import add_event_listener, elem_by_id
+from cj12.methods import KeyReceiveCallback
 
 COLOUR_THEME = "#00ff00"
+
 
 @dataclass
 class Node:
@@ -14,8 +13,8 @@ class Node:
     y_coor: int
     connected: bool
 
-class PatternLockMethod:
 
+class PatternLockMethod:
     byte = 0x05
     static_id = "pattern_lock"
     name = "Pattern Lock"
@@ -68,7 +67,7 @@ class PatternLockMethod:
 
         for node in self.node_list:
             ctx.beginPath()
-            ctx.arc(node.x_coor, node.y_coor, self.dot_radius, 0, 2*pi)
+            ctx.arc(node.x_coor, node.y_coor, self.dot_radius, 0, 2 * pi)
             ctx.lineWidth = 0
             if node.connected:
                 ctx.fillStyle = COLOUR_THEME
@@ -90,13 +89,13 @@ class PatternLockMethod:
             ctx.moveTo(node1.x_coor, node1.y_coor)
             ctx.lineTo(node2.x_coor, node2.y_coor)
             ctx.strokeStyle = COLOUR_THEME
-            ctx.lineWidth = 2   
+            ctx.lineWidth = 2
             ctx.stroke()
-    
-    def on_move(self, evt) -> None:
+
+    def on_move(self, evt: object) -> None:
         if not self.is_mouse_down:
             return
-        
+
         rect = self.canvas.getBoundingClientRect()
 
         if hasattr(evt, "touches") and evt.touches.length:
@@ -112,11 +111,11 @@ class PatternLockMethod:
             node.connected = True
             self.sequence.append(self.node_list.index(node))
 
-            if self.last_node: # and self.last_node is not node:
+            if self.last_node:  # and self.last_node is not node:
                 self.connected_nodes.append([self.last_node, node])
-            
+
             self.last_node = node
-            
+
         self.draw_pattern()
 
         if self.last_node:
@@ -125,16 +124,17 @@ class PatternLockMethod:
             ctx.moveTo(self.last_node.x_coor, self.last_node.y_coor)
             ctx.lineTo(current_x, current_y)
             ctx.strokeStyle = COLOUR_THEME
-            ctx.lineWidth = 2   
+            ctx.lineWidth = 2
             ctx.stroke()
-            
 
     def get_node(self, x: int, y: int) -> Node | None:
         """
         Get the node of a given x, y coordinate in the canvas
         """
         for node in self.node_list:
-            if ((x - node.x_coor) ** 2 + (y - node.y_coor) ** 2) ** 0.5 <= self.dot_radius:
+            if (
+                (x - node.x_coor) ** 2 + (y - node.y_coor) ** 2
+            ) ** 0.5 <= self.dot_radius:
                 return node
 
     def on_dimension_change(self, evt) -> None:
@@ -145,7 +145,8 @@ class PatternLockMethod:
         """
         Register all the event listener in the canvas
         """
-        def mouse_down(evt):
+
+        def mouse_down(_event: object) -> None:
             self.is_mouse_down = True
 
             for node in self.node_list:
@@ -155,7 +156,7 @@ class PatternLockMethod:
             self.last_node = None
             self.sequence.clear()
 
-        async def mouse_up(evt):
+        async def mouse_up(_event: object) -> None:
             self.is_mouse_down = False
             self.draw_pattern()
 

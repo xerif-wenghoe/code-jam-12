@@ -5,13 +5,13 @@ from js import FileReader, Uint8Array, alert
 
 from cj12.dom import add_event_listener, elem_by_id
 
+# async on_data_received(data, filename)
+DataReceiveCallback = Callable[[bytes, str], Awaitable[None]]
+
 
 class FileInput:
-    def __init__(
-        self,
-        on_data_received: Callable[[bytes, str], Awaitable[None]],
-    ) -> None:
-        self._on_data_received = on_data_received
+    def __init__(self, on_data_received: DataReceiveCallback) -> None:
+        self._callback = on_data_received
 
         self._reader = FileReader.new()
         add_event_listener(self._reader, "load", self._on_data_load)
@@ -27,7 +27,7 @@ class FileInput:
         self._reader.readAsArrayBuffer(file)
 
     async def _on_data_load(self, _: object) -> None:
-        await self._on_data_received(
+        await self._callback(
             bytes(Uint8Array.new(self._reader.result)),
             self._filename,
         )

@@ -13,7 +13,7 @@ class DomElement(JsDomElement):
 
 
 class ButtonElement(DomElement):
-    disabled: bool  # pyright: ignore[reportUninitializedInstanceVariable]
+    disabled: bool
 
 
 class InputElement(DomElement):
@@ -47,7 +47,7 @@ def add_event_listener(
     event: str,
     listener: Callable[[object], Awaitable[None] | None],
 ) -> None:
-    elem.addEventListener(event, create_proxy(listener))  # pyright: ignore[reportArgumentType]
+    elem.addEventListener(event, create_proxy(listener))
 
 
 async def fetch_text(url: str) -> str:

@@ -7,7 +7,7 @@
 from collections.abc import Callable, Iterable
 from typing import Any, Literal, overload, override
 
-from _pyodide._core_docs import _JsProxyMetaClass  # pyright: ignore[reportPrivateUsage]
+from _pyodide._core_docs import _JsProxyMetaClass
 from pyodide.ffi import (
     JsArray,
     JsDomElement,

@@ -32,22 +32,18 @@ class SafeMethod:
     on_key_received: KeyReceiveCallback | None = None
 
     @staticmethod
-    def grey(frac):
+    def grey(frac: float) -> str:
         return (
             "#"
             + f"{int(frac * GREY_GRADIENT[1] + (1 - frac) * GREY_GRADIENT[0]):02x}" * 3
         )
 
-    async def setup(self) -> None:
+    async def setup(self) -> None:  # noqa: PLR0915
         self.combination = []
         self.last_mousedown = None  # angle at which the mouse was clicked
         self.last_dial_value = 0  # value at which the dial was previously left at
         self.prev_angle = None  # angle at which the mouse was last detected
         self.total_angle = None
-
-        # self.div = elem_by_id("div")
-        # self.div.style.alignItems = "center"
-        # self.div.appendChild(container)
 
         self.offscreen_canvas = document.createElement("canvas")
         self.offscreen_canvas.width = 600
@@ -126,7 +122,10 @@ class SafeMethod:
         self.btn_reset = elem_by_id("btn-reset")
         add_event_listener(self.btn_reset, "click", self.reset_combination)
 
-    def prerender_ticks(self):
+    def align_center(self) -> None:
+        self.div.style.alignItems = "center"
+
+    def prerender_ticks(self) -> None:
         ctx = self.offscreen_canvas.getContext("2d")
         w, h = self.offscreen_canvas.width, self.offscreen_canvas.height
         ctx.clearRect(-w / 2, -h / 2, w, h)
@@ -136,15 +135,16 @@ class SafeMethod:
             ctx.beginPath()
             ctx.rotate(TWO_PI * tick / TICKS)
             for t_type, interval in enumerate(TICK_INTERVALS):
-                if tick % interval == 0:
-                    break
-            ctx.roundRect(
-                -TICK_WIDTHS[t_type] / 2,
-                -OUTER_RADIUS + 4,
-                TICK_WIDTHS[t_type],
-                TICK_LENGTHS[t_type],
-                TICK_WIDTHS[t_type] / 2,
-            )
+                if tick % interval != 0:
+                    continue
+                ctx.roundRect(
+                    -TICK_WIDTHS[t_type] / 2,
+                    -OUTER_RADIUS + 4,
+                    TICK_WIDTHS[t_type],
+                    TICK_LENGTHS[t_type],
+                    TICK_WIDTHS[t_type] / 2,
+                )
+                break
             ctx.fill()
             ctx.restore()
 
@@ -163,7 +163,7 @@ class SafeMethod:
             ctx.restore()
         ctx.restore()
 
-    def draw_ticks(self, angle=0):
+    def draw_ticks(self, angle: float = 0.0) -> None:
         w, h = self.dial_canvas.width, self.dial_canvas.height
         ctx = self.dial_canvas.getContext("2d")
         ctx.clearRect(-w / 2, -h / 2, w, h)
@@ -182,17 +182,17 @@ class SafeMethod:
         ctx.stroke()
 
     # Define a function to log
-    def log_output(self, msg):
+    def log_output(self, msg: str) -> None:
         self.output_div.innerHTML += msg + "<br>"
         self.output_div.scrollTop = self.output_div.scrollHeight  # auto-scroll
 
-    def get_mouse_coords(self, event):
+    def get_mouse_coords(self, event: object) -> None:
         rect = self.dial_canvas.getBoundingClientRect()
         mx = event.clientX - rect.left - rect.width // 2
         my = event.clientY - rect.top - rect.height // 2
         return mx, my
 
-    def on_mouse_down(self, event):
+    def on_mouse_down(self, event: object) -> None:
         if self.total_angle is not None:
             self.register_knob_turn()
             return
@@ -202,10 +202,9 @@ class SafeMethod:
         self.total_angle = 0
         self.last_mousedown = ((mx, my), math.atan2(my, mx))
 
-    def on_mouse_move(self, event):
+    def on_mouse_move(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
         if self.last_mousedown is None:
-            # self.log_output(f"({mx, my}) angle: {math.atan2(my, mx)}")
             return
         curr_angle = math.atan2(my, mx)
         d_theta = curr_angle - self.last_mousedown[1]
@@ -214,10 +213,9 @@ class SafeMethod:
         if pi_diffs % 2 == 1:
             pi_diffs += 1
         self.total_angle = d_theta + (-1 if diff < 0 else 1) * pi_diffs * math.pi
-        # self.log_output(f"Total: {self.total_angle}")
         self.draw_ticks(self.total_angle + self.last_dial_value * TWO_PI / TICKS)
 
-    def on_mouse_up(self, event):
+    def on_mouse_up(self, event: object) -> None:
         if self.last_mousedown is None:
             return
         mx, my = self.get_mouse_coords(event)
@@ -225,30 +223,31 @@ class SafeMethod:
         if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:
             self.register_knob_turn()
 
-    def change_dial_type(self, event):
-        print("Received:", event)
+    def change_dial_type(self, event: object) -> None:
         global TICKS, TICK_INTERVALS
         TICKS, TICK_INTERVALS = TICK_CHOICES[int(event.target.value)]
         self.prerender_ticks()
         self.reset_combination(event)
 
-    def register_knob_turn(self):
+    async def register_knob_turn(self) -> None:
         val = (1 if self.total_angle >= 0 else -1) * round(
             abs(self.total_angle) * TICKS / TWO_PI,
         )
         self.combination.append(val)
-        self.log_output(f"{self.combination}")
         self.last_mousedown = None
         self.last_dial_value = (self.last_dial_value + val) % TICKS
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
+        if self.on_key_received is not None:
+            await self.on_key_received(bytes(self.combination))
 
-    def reset_combination(self, _event: object):
+    async def reset_combination(self, _event: object) -> None:
         self.last_mousedown = None
         self.last_dial_value = 0
         self.draw_ticks()
         self.prev_angle = None
         self.total_angle = None
         self.combination = []
-        self.log_output(f"{self.combination}")
+        if self.on_key_received is not None:
+            await self.on_key_received(bytes(self.combination))

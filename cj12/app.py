@@ -97,10 +97,10 @@ class App:
         blob = Blob.new([u8], {"type": "application/octet-stream"})
         url = URL.createObjectURL(blob)
         a = document.createElement("a")
-        a.href = url  # pyright: ignore[reportAttributeAccessIssue]
-        a.download = filename  # pyright: ignore[reportAttributeAccessIssue]
+        a.href = url
+        a.download = filename
         document.body.appendChild(a)
-        a.click()  # pyright: ignore[reportAttributeAccessIssue]
+        a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
