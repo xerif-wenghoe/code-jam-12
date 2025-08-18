@@ -54,7 +54,7 @@ class MusicMethod:
         self.currentColumn = None
         self.playing = False
 
-        self.bpm = 60
+        self.bpm = 120
         self.interval = 60000 / self.bpm
 
         rectCanvas = self.canvas.getBoundingClientRect()
@@ -106,7 +106,7 @@ class MusicMethod:
     # Main event loop, calls self
     # TODO: REFACTOR setTimeout
     def _tick(self) -> None:
-        if not self.playing:
+        if not self.playing or not elem_by_id("instrument-canvas"):
             return
         self._play_notes(self.grid[self.currentColumn])
         self._draw_grid()
