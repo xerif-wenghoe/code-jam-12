@@ -24,10 +24,9 @@ class PatternLockMethod:
 
     dot_radius: int = 15
     lock_grid_length: int = 300
-    dimension: int = 3 # n by n dots
+    dimension: int = 3  # n by n dots
 
-
-    async def setup(self) -> None: 
+    async def setup(self) -> None:
         self.init()
         self.setup_event_listener()
 
@@ -53,10 +52,12 @@ class PatternLockMethod:
         for row in range(self.dimension):
             for col in range(self.dimension):
                 self.node_list.append(
-                    Node(int(col * node_length + node_length / 2), 
-                         int(row * node_length + node_length / 2), 
-                         False)
-                    )
+                    Node(
+                        int(col * node_length + node_length / 2),
+                        int(row * node_length + node_length / 2),
+                        connected=False,
+                    ),
+                )
 
     def draw_pattern(self) -> None:
         """
@@ -137,7 +138,9 @@ class PatternLockMethod:
             ) ** 0.5 <= self.dot_radius:
                 return node
 
-    def on_dimension_change(self, evt) -> None:
+        return None
+
+    def on_dimension_change(self, evt: object) -> None:
         self.dimension = 3 + int(evt.target.value)
         self.init()
 
@@ -161,13 +164,12 @@ class PatternLockMethod:
             self.draw_pattern()
 
             if self.on_key_received is not None:
-                await self.on_key_received("".join(map(lambda x: str(x), self.sequence)).encode())
-                
-            # console.log("".join(map(lambda x: str(x), self.sequence)))
-        
+                await self.on_key_received(
+                    "".join([str(x) for x in self.sequence]).encode(),
+                )
+
         self.dimension_selection = elem_by_id("dial-num")
         add_event_listener(self.canvas, "mousedown", mouse_down)
         add_event_listener(self.canvas, "mouseup", mouse_up)
         add_event_listener(self.canvas, "mousemove", self.on_move)
         add_event_listener(self.dimension_selection, "input", self.on_dimension_change)
-

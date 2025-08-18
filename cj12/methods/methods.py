@@ -5,13 +5,13 @@ from js import document
 from cj12.dom import add_event_listener, elem_by_id, fetch_text
 from cj12.methods import KeyReceiveCallback
 from cj12.methods.chess import ChessMethod
+from cj12.methods.colour_picker import ColourPickerMethod
 from cj12.methods.direction import DirectionLockMethod
 from cj12.methods.location import LocationMethod
 from cj12.methods.music import MusicMethod
 from cj12.methods.password import PasswordMethod
 from cj12.methods.pattern_lock import PatternLockMethod
 from cj12.methods.safe import SafeMethod
-from cj12.methods.colour_picker import ColourPickerMethod
 
 
 class Method(Protocol):
@@ -32,8 +32,8 @@ methods: list[Method] = [
     SafeMethod(),
     PatternLockMethod(),
     MusicMethod(),
-    DirectionLockMethod(),,
-    ColourPickerMethod()
+    DirectionLockMethod(),
+    ColourPickerMethod(),
 ]
 
 
