@@ -114,10 +114,11 @@ class MusicMethod:
     # Main event loop, calls self
     # TODO: REFACTOR setTimeout
     def _tick(self):
-        self._play_notes(self.grid[self.currentColumn])
-        self._draw_grid()
-        self.currentColumn = (self.currentColumn + 1) % self.columns
-        setTimeout(self.tick_proxy, self.interval)
+        if self.playing:
+            self._play_notes(self.grid[self.currentColumn])
+            self._draw_grid()
+            self.currentColumn = (self.currentColumn + 1) % self.columns
+            setTimeout(self.tick_proxy, self.interval)
         
 
     def _play_note(self, noteName: str) -> None:
