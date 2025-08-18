@@ -15,6 +15,7 @@ class LocationMethod:
     async def setup(self) -> None:
         self._map = None
         self._rect = None
+        self._marker = None
 
         m = window.L.map("map").setView(to_js([0, 0]), 1)
         self._map = m
@@ -53,6 +54,11 @@ class LocationMethod:
                 ).addTo(m)
             else:
                 self._rect.setBounds(bounds)
+
+            if self._marker is None:
+                self._marker = window.L.marker(to_js([rlat, rlng])).addTo(m)
+            else:
+                self._marker.setLatLng(to_js([rlat, rlng]))
 
             if self.on_key_received is not None:
                 await self.on_key_received(key_str.encode())
