@@ -27,7 +27,7 @@ from cj12.methods import KeyReceiveCallback
 
 
 class MusicMethod:
-    byte = 0x02
+    byte = 0x07
     static_id = "music"
     name = "Music"
     description = "A song"
