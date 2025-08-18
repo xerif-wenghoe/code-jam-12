@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .direction-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            min-height: 50vh;
+            background: #000;
+            color: #fff;
+        }
+
+        .canvas-container {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        #direction-canvas {
+            cursor: grab;
+            border-radius: 10px;
+            width: 50vw;
+            max-width: 600px;
+            height: auto;
+            display: block;
+        }
+
+        #direction-canvas:active {
+            cursor: grabbing;
+        }
+
+        .output-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #direction-output {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            resize: vertical;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            backdrop-filter: blur(5px);
+        }
+
+        #direction-output::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .instructions {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        .knob-highlight {
+            color: #87CEEB;
+            font-weight: bold;
+        }
+
+        .title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #87CEEB;
+            text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+        }
+
+        .tip {
+            background: rgba(135, 206, 235, 0.1);
+            border: 1px solid rgba(135, 206, 235, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            font-weight: 500;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .remove-btn {
+            color: #FF6B6B;
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .reset-btn {
+            color: #4CAF50;
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+
+        .reset-btn:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            #direction-canvas {
+                width: 80vw;
+                max-width: 350px;
+            }
+
+            .instructions {
+                font-size: 14px;
+            }
+
+            .title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="direction-container">
+        <div class="instructions">
+            <h1 class="title">Direction Lock</h1>
+            <p>Drag the <span class="knob-highlight">light blue knob</span> in the center to input directions.
+            The knob will animate as you drag it, and the sequence will be recorded below.</p>
+            <div class="tip">
+                <strong>Tip:</strong> You need to drag at least 30 pixels for a direction to be recorded.
+                The gray trails show the available directions.
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="direction-canvas"></canvas>
+        </div>
+
+        <div class="output-container">
+            <label for="direction-output">Recorded Sequence:</label>
+            <textarea id="direction-output" readonly placeholder="Your direction sequence will appear here..."></textarea>
+
+            <div class="button-container">
+                <button id="btn-remove-last" class="control-btn remove-btn">
+                    <span>↶</span> Remove Last
+                </button>
+                <button id="btn-reset-all" class="control-btn reset-btn">
+                    <span>↺</span> Reset All
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
