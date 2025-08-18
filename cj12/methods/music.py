@@ -9,8 +9,6 @@ from cj12.methods import KeyReceiveCallback
 # NOTES
 
 # IMPORTANT
-# Implement key system using self.grid
-# Change grid size based on screen width
 # Refactor setTimeout
 # new art
 
@@ -18,12 +16,17 @@ from cj12.methods import KeyReceiveCallback
 # Refactor self.currentColumn and self.playing
 # Refactor constants, note numbering system
 # Refactor event loop to use dtime
-# Refactor all canvas to account for dpi
-# Refactor all canvas to account for subpixels
+# change camelCase to snake_case
 
 # LEARN
 # look into BETTER ASYNC LOADING copied from chess
 # look into intervalevents
+
+# DONE
+# Implement key system using self.grid
+# Change grid size based on screen width
+# Refactor all canvas to account for dpi
+# Refactor all canvas to account for subpixels
 
 
 class MusicMethod:
@@ -58,10 +61,15 @@ class MusicMethod:
         self.interval = 60000 / self.bpm
 
         rect_canvas = self.canvas.getBoundingClientRect()
+        dpr = window.devicePixelRatio or 1
+        self.canvas.width = rect_canvas.width * dpr
+        self.canvas.height = rect_canvas.height * dpr
+        self.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         self.canvas.width = self.width = rect_canvas.width
         self.canvas.height = self.height = rect_canvas.height
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
+        
 
         self.timeout_calls = []
 
@@ -115,6 +123,10 @@ class MusicMethod:
 
     def _height_setup(self, _event: object) -> None:
         rect_canvas = self.canvas.getBoundingClientRect()
+        dpr = window.devicePixelRatio or 1
+        self.canvas.width = rect_canvas.width * dpr
+        self.canvas.height = rect_canvas.height * dpr
+        self.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         self.canvas.width = self.width = rect_canvas.width
         self.canvas.height = self.height = rect_canvas.height
         self.box_width = self.width / self.columns
