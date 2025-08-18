@@ -11,7 +11,7 @@ COLOUR_HEX = {
 class ColourPickerMethod:
     byte = 0x08
     static_id = "colour_picker"
-    name = "Colour Picker Lock"
+    name = "Colour Picker"
     description = "A colour hex code lock"
 
     on_key_received: KeyReceiveCallback | None = None
