@@ -57,9 +57,9 @@ class MusicMethod:
         self.bpm = 120
         self.interval = 60000 / self.bpm
 
-        rectCanvas = self.canvas.getBoundingClientRect()
-        self.canvas.width = self.width = rectCanvas.width
-        self.canvas.height = self.height = rectCanvas.height
+        rect_canvas = self.canvas.getBoundingClientRect()
+        self.canvas.width = self.width = rect_canvas.width
+        self.canvas.height = self.height = rect_canvas.height
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
 
@@ -75,8 +75,6 @@ class MusicMethod:
         await self.load_notes()
 
     def resize_canvas(self, ratio: float) -> None:
-        #self.canvas.style.width = f"{window.screen.width * ratio}px"
-        #self.canvas.style.height = f"{window.screen.height * ratio}px"
         self.canvas.width = window.screen.width * ratio
         self.canvas.height = window.screen.height * ratio
 
@@ -97,7 +95,9 @@ class MusicMethod:
 
         self.notes = {}
         for note_name in note_names:
-            self.notes[note_name] = await load_sound(f"/methods/music/audio/{note_name}.mp3")
+            self.notes[note_name] = await load_sound(
+                f"/methods/music/audio/{note_name}.mp3",
+            )
 
         self.tick_proxy = create_proxy(
             self._tick,
@@ -112,11 +112,11 @@ class MusicMethod:
         self._draw_grid()
         self.currentColumn = (self.currentColumn + 1) % self.columns
         self.timeout_calls.append(setTimeout(self.tick_proxy, self.interval))
-    
-    def _height_setup(self, _event: object):
-        rectCanvas = self.canvas.getBoundingClientRect()
-        self.canvas.width = self.width = rectCanvas.width
-        self.canvas.height = self.height = rectCanvas.height
+
+    def _height_setup(self, _event: object) -> None:
+        rect_canvas = self.canvas.getBoundingClientRect()
+        self.canvas.width = self.width = rect_canvas.width
+        self.canvas.height = self.height = rect_canvas.height
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
         self._draw_grid()
@@ -134,7 +134,6 @@ class MusicMethod:
     async def _update_on_click(self, event: object) -> None:
         key = self._flatten_list()
         await self.on_key_received(key.encode())
-        print(key)
         rect_canvas = self.canvas.getBoundingClientRect()
         click_x = event.clientX - rect_canvas.left
         click_y = event.clientY - rect_canvas.top
@@ -146,11 +145,11 @@ class MusicMethod:
         if self.grid[column_clicked][row_clicked] == 1:
             self._play_note(f"{self.rows - row_clicked + 7 - 1}")
         self._draw_grid()
-    
-    def _flatten_list(self):
-        encoded = "".join("1" if cell == 1 else "0" for column in self.grid for cell in column)
-        return encoded
 
+    def _flatten_list(self) -> str:
+        return "".join(
+            "1" if cell == 1 else "0" for column in self.grid for cell in column
+        )
 
     # look into intervalevents
     def _toggle_play(self, _event: object) -> None:
