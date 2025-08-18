@@ -45,7 +45,7 @@ class MusicMethod:
         self.ctx.imageSmoothingEnabled = False
 
         self.rows = 16
-        self.columns = 16
+        self.columns = 32
 
         # Create the grid data structure
         # SELF.GRID IS WHAT THE KEY SHOULD BE
@@ -95,9 +95,7 @@ class MusicMethod:
 
         self.notes = {}
         for note_name in note_names:
-            self.notes[note_name] = await load_sound(
-                f"/methods/music/audio/{note_name}.mp3",
-            )
+            self.notes[note_name] = await load_sound(f"/methods/music/audio/{note_name}.mp3")
 
         self.tick_proxy = create_proxy(
             self._tick,
@@ -123,7 +121,9 @@ class MusicMethod:
             if on == 1:
                 self._play_note(f"{self.rows - number + 7 - 1}")  # make more clear
 
-    def _update_on_click(self, event: object) -> None:
+    async def _update_on_click(self, event: object) -> None:
+        key = self._flatten_list()
+        await self.on_key_received(key.encode())
         rect_canvas = self.canvas.getBoundingClientRect()
         click_x = event.clientX - rect_canvas.left
         click_y = event.clientY - rect_canvas.top
@@ -135,6 +135,11 @@ class MusicMethod:
         if self.grid[column_clicked][row_clicked] == 1:
             self._play_note(f"{self.rows - row_clicked + 7 - 1}")
         self._draw_grid()
+    
+    def _flatten_list(self):
+        encoded = "".join("1" if cell == 1 else "0" for column in self.grid for cell in column)
+        return encoded
+
 
     # look into intervalevents
     def _toggle_play(self, _event: object) -> None:
