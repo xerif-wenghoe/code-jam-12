@@ -297,7 +297,7 @@ class ChessMethod:
             "P": "Pawn",
         }.get(event.key.upper(), False)
         if (
-            not piece
+            piece is False
             or (board_square := self.mouse_on_board_square(*self.last_mouse_pos))
             is None
         ):
