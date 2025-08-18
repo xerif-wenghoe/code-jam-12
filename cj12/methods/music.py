@@ -57,8 +57,9 @@ class MusicMethod:
         self.bpm = 60
         self.interval = 60000 / self.bpm
 
-        self.width = self.canvas.width
-        self.height = self.canvas.height
+        rectCanvas = self.canvas.getBoundingClientRect()
+        self.canvas.width = self.width = rectCanvas.width
+        self.canvas.height = self.height = rectCanvas.height
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
 
@@ -70,11 +71,12 @@ class MusicMethod:
         add_event_listener(self.canvas, "click", self._update_on_click)
         add_event_listener(self.playButton, "click", self._toggle_play)
         add_event_listener(self.bpmSlider, "change", self._change_bpm)
+        add_event_listener(window, "resize", self._height_setup)
         await self.load_notes()
 
     def resize_canvas(self, ratio: float) -> None:
-        self.canvas.style.width = f"{window.screen.width * ratio}px"
-        self.canvas.style.height = f"{window.screen.height * ratio}px"
+        #self.canvas.style.width = f"{window.screen.width * ratio}px"
+        #self.canvas.style.height = f"{window.screen.height * ratio}px"
         self.canvas.width = window.screen.width * ratio
         self.canvas.height = window.screen.height * ratio
 
@@ -110,6 +112,14 @@ class MusicMethod:
         self._draw_grid()
         self.currentColumn = (self.currentColumn + 1) % self.columns
         self.timeout_calls.append(setTimeout(self.tick_proxy, self.interval))
+    
+    def _height_setup(self, _event: object):
+        rectCanvas = self.canvas.getBoundingClientRect()
+        self.canvas.width = self.width = rectCanvas.width
+        self.canvas.height = self.height = rectCanvas.height
+        self.box_width = self.width / self.columns
+        self.box_height = self.height / self.rows
+        self._draw_grid()
 
     def _play_note(self, note_name: str) -> None:
         notefound = self.notes[f"Piano.{note_name}"]
@@ -124,6 +134,7 @@ class MusicMethod:
     async def _update_on_click(self, event: object) -> None:
         key = self._flatten_list()
         await self.on_key_received(key.encode())
+        print(key)
         rect_canvas = self.canvas.getBoundingClientRect()
         click_x = event.clientX - rect_canvas.left
         click_y = event.clientY - rect_canvas.top
