@@ -5,6 +5,15 @@
   <canvas id="static-canvas" width="600" height="400"></canvas>
   <canvas id="dial-canvas" width="600" height="400"></canvas>
 </div>
+<br>
+<div id="instructions">
+  <h1 class="title">Safe Lock</h1>
+  <p>Enter a safe combination by spinning the safe wheel any other number of times clockwise or counterclockwise.
+    Use the slider to select a different dial.
+  </SPACE></p>
+  <br>
+</div>
+<div>Current Combination</div>
 <div id="output"></div>
 
 <style>
@@ -25,8 +34,18 @@
   }
 
   #output {
-    height: 100px;
+    grid-column: span 3;
+    height: 50px;
     border: 1px solid #00ff00;
     overflow-y: auto;
   }
+
+  #instructions {
+    grid-column: span 3;
+    place-items: center;
+    & > canvas {
+      grid-area: 1 / 1;
+    }
+  }
+
 </style>

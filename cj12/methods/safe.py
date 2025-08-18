@@ -186,9 +186,9 @@ class SafeMethod:
         my = event.clientY - rect.top - rect.height // 2
         return mx, my
 
-    def on_mouse_down(self, event: object) -> None:
+    async def on_mouse_down(self, event: object) -> None:
         if self.total_angle is not None:
-            self.register_knob_turn()
+            await self.register_knob_turn()
             return
         mx, my = self.get_mouse_coords(event)
         if mx**2 + my**2 > OUTER_RADIUS**2:
@@ -209,19 +209,19 @@ class SafeMethod:
         self.total_angle = d_theta + (-1 if diff < 0 else 1) * pi_diffs * math.pi
         self.draw_ticks(self.total_angle + self.last_dial_value * TWO_PI / TICKS)
 
-    def on_mouse_up(self, event: object) -> None:
+    async def on_mouse_up(self, event: object) -> None:
         if self.last_mousedown is None:
             return
         mx, my = self.get_mouse_coords(event)
         px, py = self.last_mousedown[0]
         if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:
-            self.register_knob_turn()
+            await self.register_knob_turn()
 
-    def change_dial_type(self, event: object) -> None:
+    async def change_dial_type(self, event: object) -> None:
         global TICKS, TICK_INTERVALS
         TICKS, TICK_INTERVALS = TICK_CHOICES[int(event.target.value)]
         self.prerender_ticks()
-        self.reset_combination(event)
+        await self.reset_combination(event)
 
     async def register_knob_turn(self) -> None:
         val = (1 if self.total_angle >= 0 else -1) * round(
@@ -233,8 +233,9 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
+        self.output_div.innerText = ' -> '.join(f"{'+' if x > 0 else ''}{x}" for x in self.combination)
         if self.on_key_received is not None:
-            await self.on_key_received(bytes(self.combination))
+            await self.on_key_received(str(self.combination).encode())
 
     async def reset_combination(self, _event: object) -> None:
         self.last_mousedown = None
@@ -243,5 +244,6 @@ class SafeMethod:
         self.prev_angle = None
         self.total_angle = None
         self.combination = []
+        self.output_div.innerText = ''
         if self.on_key_received is not None:
-            await self.on_key_received(bytes(self.combination))
+            await self.on_key_received(str(self.combination).encode())
