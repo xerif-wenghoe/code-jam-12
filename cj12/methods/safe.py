@@ -180,7 +180,6 @@ class SafeMethod:
         ctx.fill()
         ctx.stroke()
 
-
     def get_mouse_coords(self, event: object) -> None:
         rect = self.dial_canvas.getBoundingClientRect()
         mx = event.clientX - rect.left - rect.width // 2
@@ -234,7 +233,6 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
-        # print(self.combination)
         if self.on_key_received is not None:
             await self.on_key_received(bytes(self.combination))
 
