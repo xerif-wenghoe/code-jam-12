@@ -1,0 +1,19 @@
+<canvas id="instrument-canvas" width="800" height="400" style="width:800px; height:400px;"></canvas>
+<button id="play-button">▶</button>
+<div class="slidecontainer">
+  <label id="bpm-display" for="bpm-slider">BPM: 60</label>
+  <input type="range" min="30" max="240" value="60" class="slider" id="bpm-slider">
+</div>
+
+
+<style>
+  #method {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+  }
+
+  #map {
+    height: 100%;
+  }
+</style>
