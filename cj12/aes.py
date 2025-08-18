@@ -1,25 +1,6 @@
-from typing import Final
-
 import numpy as np
 
 __all__ = ["decrypt", "encrypt"]
-
-
-KEY_LENGTH_16: Final[int] = 16
-KEY_LENGTH_24: Final[int] = 24
-KEY_LENGTH_32: Final[int] = 32
-
-
-def ensure_length(key: bytes) -> bytes:
-    if len(key) < KEY_LENGTH_16:
-        key = key + b"\x00" * (KEY_LENGTH_16 - len(key))
-    elif len(key) < KEY_LENGTH_24:
-        key = key + b"\x00" * (KEY_LENGTH_24 - len(key))
-    elif len(key) < KEY_LENGTH_32:
-        key = key + b"\x00" * (KEY_LENGTH_32 - len(key))
-    else:
-        key = key[:KEY_LENGTH_32]
-    return key
 
 
 def encrypt(data: bytes, key: bytes) -> bytes:
@@ -40,7 +21,9 @@ class AES:
     ```
     """
 
-    # Set up S-box
+    # Set up S-box.
+    # The S-box is a crucial step in the AES algorithm. Its purpose to act as a lookup
+    # table to replace bytes with other bytes. This introduces confusion.
     # fmt: off
     sbox = np.array([
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
@@ -83,6 +66,8 @@ class AES:
     for i in range(len(sbox)):
         sbox_inv[sbox[i]] = i
 
+    # During the creation of the round keys, the Rcon array is used to add a certain
+    # value to the key each round, to produce the key for the next round.
     Rcon = np.array(
         [
             [0x01, 0x00, 0x00, 0x00],
@@ -116,6 +101,7 @@ class AES:
     def sub_bytes(arr: np.ndarray, sbox: np.ndarray) -> np.ndarray:
         return sbox[arr]
 
+    # performs multiplication by 2 under GF(2^8).
     @staticmethod
     def mul2(x: int) -> int:
         result = (x << 1) & 0xFF
@@ -123,6 +109,13 @@ class AES:
             result ^= 0x1B
         return result
 
+    # These 2 methods act on each separate column of the data array. Values are 'mixed'
+    # by multplying the matrix:
+    #
+    #   [[2, 3, 1, 1],
+    #    [1, 2, 3, 1],  # noqa: ERA001
+    #    [1, 1, 2, 3],  # noqa: ERA001
+    #    [3, 1, 1, 2]] (under GF(2^8))
     @staticmethod
     def mix_column(col: np.ndarray) -> np.ndarray:
         x2 = AES.mul2
@@ -188,7 +181,7 @@ class AES:
         arr[:] = arr[:, np.arange(4).reshape(4, 1), shifter]
 
     def __init__(self, key: bytes) -> None:
-        if len(key) not in [KEY_LENGTH_16, KEY_LENGTH_24, KEY_LENGTH_32]:
+        if len(key) not in {16, 24, 32}:
             msg = "Incorrect number of bits (should be 128, 192, or 256-bit)"
             raise ValueError(msg)
         self.key = np.frombuffer(key, dtype=np.uint8)
@@ -197,6 +190,7 @@ class AES:
         self.Nb = 4  # No. of words in AES state
         self.round_keys = self._key_expansion()
 
+    # The actual AES key is expanded into either 11, 13 or 15 round keys.
     def _key_expansion(self) -> np.ndarray:
         words = np.empty((self.Nb * (self.Nr + 1) * 4,), dtype=np.uint8)
         words[: len(self.key)] = self.key

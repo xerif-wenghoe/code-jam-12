@@ -1,0 +1,45 @@
+<button id="btn-clear-board">Clear board</button>
+<button id="btn-initial-position">Initial position</button>
+
+<div id="canvasses">
+  <canvas id="background-canvas" width="600" height="400"></canvas>
+  <canvas id="piece-canvas" width="600" height="400"></canvas>
+</div>
+
+<div id="instructions">
+  <h1 class="title">Chessboard Lock</h1>
+  <p>Drag the chesspieces to create a unique board state.
+     SPACE clears a piece under the mouse. Press Q, K, R, B, N or P to instantly place a piece. </SPACE></p>
+</div>
+
+<style>
+  #method {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  #canvasses {
+    grid-column: span 3;
+    display: grid;
+    place-items: center;
+    & > canvas {
+      grid-area: 1 / 1;
+    }
+  }
+
+  #piece-canvas:focus {
+    outline: none;
+  }
+
+  #instructions {
+    grid-column: span 3;
+    place-items: center;
+    & > canvas {
+      grid-area: 1 / 1;
+    }
+  }
+
+</style>

@@ -1,13 +1,13 @@
 # This comes from https://github.com/pyodide/pyodide/blob/main/src/py/js.pyi
 # with some minor modifications
 
-# ruff: noqa: N802, A002, N803, N815, N801, ANN401
+# ruff: noqa: N802, A002, N803, N815, N801
 # pyright: reportAny=false, reportExplicitAny=false
 
 from collections.abc import Callable, Iterable
 from typing import Any, Literal, overload, override
 
-from _pyodide._core_docs import _JsProxyMetaClass  # pyright: ignore[reportPrivateUsage]
+from _pyodide._core_docs import _JsProxyMetaClass
 from pyodide.ffi import (
     JsArray,
     JsDomElement,
@@ -19,6 +19,7 @@ from pyodide.ffi import (
 )
 from pyodide.webloop import PyodideFuture
 
+def alert(msg: str) -> None: ...
 def eval(code: str) -> Any: ...  # noqa: A001
 
 # in browser the cancellation token is an int, in node it's a special opaque
@@ -79,9 +80,20 @@ class _TypedArray(_JsObject):
 
 class Uint8Array(_TypedArray):
     BYTES_PER_ELEMENT: int = 1
+    @staticmethod
+    def from_(data: bytes) -> Uint8Array: ...
+    def set(self, data: bytes) -> None: ...
 
 class Float64Array(_TypedArray):
     BYTES_PER_ELEMENT: int = 8
+
+class URL(_JsObject):
+    @staticmethod
+    def createObjectURL(blob: JsProxy) -> URL: ...
+    @staticmethod
+    def revokeObjectURL(url: URL) -> None: ...
+
+class Blob(_JsObject): ...
 
 class JSON(_JsObject):
     @staticmethod
@@ -90,8 +102,10 @@ class JSON(_JsObject):
     def parse(a: str) -> JsProxy: ...
 
 class _DomElement(JsDomElement):
-    innerText: str
     innerHTML: str
+    innerText: str
+    className: str
+    def removeChild(self, child: _DomElement) -> None: ...
 
 class document(_JsObject):
     title: str
@@ -160,7 +174,9 @@ class Promise(_JsObject):
     def resolve(value: Any) -> Promise: ...
 
 class FileReader(_DomElement):
+    result: JsProxy
+
     @override
     @staticmethod
     def new() -> FileReader: ...
-    def readAsBinaryString(self, file: object) -> None: ...
+    def readAsArrayBuffer(self, file: object) -> None: ...

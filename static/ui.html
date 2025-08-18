@@ -1,141 +1,200 @@
 <main>
-  <header>
-    <h1 class="title">Super Ultra Encryptor</h1>
-  </header>
+  <section id="method"></section>
 
-  <section id="file-area">
-    <label for="file-input" class="dropzone">
-      Drag and drop files here, or click to select
-    </label>
-    <input type="file" id="file-input" />
+  <section id="action-bar">
+    <input id="file-input" type="file" />
+    <label for="file-input" id="dropzone">Select a file</label>
+
+    <button id="encrypt-button" disabled>Encrypt</button>
+    <button id="decrypt-button" disabled>Decrypt</button>
   </section>
-
-  <section class="selections">
-    <img src="/img/p1.jpg" class="image-placeholder" />
-    <img src="/img/p2.jpg" class="image-placeholder" />
-    <img src="/img/p3.jpg" class="image-placeholder" />
-    <img src="/img/p4.jpg" class="image-placeholder" />
-    <img src="/img/p5.png" class="image-placeholder" />
-  </section>
-
 </main>
 
 <style>
-  :root{
-    --primary-colour: white; /*Background*/
-    --accent-colour: #282f39; /*Text*/
-    --primary-outline: #bec0d8;
-    --secondary-background: #efeef3;
-    --element-colour: rgb(244, 107, 107);
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font: inherit;
+    color: inherit;
   }
 
-  header {
-    text-align: center;
+  :root {
+    --bg-primary: hsl(120 100% 0%);
+    --bg-secondary: hsl(120 100% 10%);
+    --bg-tertiary: hsl(120 100% 5%);
+
+    --fg-primary: hsl(120 100% 50%);
+    --range-track: var(--bg-secondary);
+    --range-thumb: var(--fg-primary);
+    --range-thumb-border: var(--bg-tertiary);
   }
 
-  .title {
-    font-size: 4rem;
-    font-weight: bolder;
+  body {
+    font-family: "JetBrains Mono", monospace;
+    background-color: var(--bg-primary);
+    color: var(--fg-primary);
   }
 
   main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    height: 100vh;
+    max-width: 80rem;
+    margin: 0 auto;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding: 2rem;
     gap: 2rem;
-    margin: 3% 3% 3% 3%;
-    padding: 3% 3% 3% 3%;
-    border: 3px solid #ffffff;
   }
 
-  section {
-    display: flex;
-    flex-direction: column;
+  button,
+  input {
+    border: 2px solid var(--fg-primary);
+    background-color: var(--bg-primary);
+    padding: 0.5rem;
+    outline: none;
+  }
+
+  button {
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 50%;
+    }
+
+    &:enabled:hover {
+      background-color: var(--bg-tertiary);
+    }
+  }
+
+  #action-bar {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+  }
+
+  #dropzone {
+    padding: 0.5rem;
+    display: grid;
+    justify-content: center;
     align-items: center;
-    text-align: center;
-    padding-top: 20px;
+    border: 2px dashed var(--fg-primary);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--bg-tertiary);
+    }
+  }
+
+  /* Retro green-only range input styles */
+  input[type="range"] {
+    border: none;
     width: 100%;
+    background: transparent;
+    accent-color: var(--fg-primary);
+    margin: 1rem 0;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--range-track);
+    border-radius: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--range-thumb);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px;
+  }
+
+  input[type="range"]:focus::-webkit-slider-thumb {
+    outline: none;
+  }
+
+  /* Firefox */
+  input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: var(--range-track);
+    border-radius: 0;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--range-thumb);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  input[type="range"]:focus::-moz-range-thumb {
+    outline: none;
+  }
+
+  /* Remove default outline for range */
+  input[type="range"]::-ms-fill-lower,
+  input[type="range"]::-ms-fill-upper {
+    background: var(--range-track);
+    border-radius: 0;
+  }
+  input[type="range"]::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--range-thumb);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  input[type="range"]:focus::-ms-thumb {
+    outline: none;
+  }
+
+  input[type="range"]:focus {
+    outline: none;
   }
 
   #file-input {
     display: none;
   }
 
-  .file-display {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    color: black;
-  }
-
-  .inner-flex {
-    border: 3px solid #ffffff;
-    width: 100%;
-    padding: 3% 3% 3% 3%;
-  }
-
-  .right {
-    align-self: right;
-  }
-
-  .button{
-    background-color: var(--element-colour);
-    color: white;
-    font-weight: bold;
-    box-shadow: 0px 0px 15px 5px var(--element-colour);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  #key-input {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid var(--primary-outline);
-    border-radius: 5px;
-    font-size: 16px;
-    margin: 10px 0;
-  }
-
-  #key-input:focus {
-    outline: none;
-    border-color: var(--element-colour);
-    box-shadow: 0px 0px 5px 2px var(--element-colour);
-  }
-
-  label {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .dropzone {
-    border: 3px dashed #ffffff;
-    border-radius: 10px;
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: large;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 20px auto;
-  }
-
-  .selections {
-    width: 100%;
+  #method-selections {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 128px);
-    gap: 50px;
-    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    grid-auto-rows: minmax(auto, 8rem);
+    gap: 1rem;
   }
 
-  .image-placeholder {
-    width: 128px;
-    height: 128px;
-    border-radius: 8px;
-    object-fit: cover;
+  .method-selection {
+    text-align: left;
+    display: grid;
+    padding: 1rem;
+    gap: 0.5rem 1rem;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "img name"
+      "img description";
+
+    & > img {
+      grid-area: img;
+      width: 5rem;
+      aspect-ratio: 1;
+      align-self: center;
+      image-rendering: pixelated;
+    }
+
+    & > h2 {
+      grid-area: name;
+      font-size: 20px;
+    }
+
+    & > p {
+      grid-area: description;
+    }
   }
 </style>

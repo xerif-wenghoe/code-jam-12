@@ -1,3 +1,5 @@
+import os
+
 import uvicorn
 from starlette.applications import Starlette
 from starlette.routing import Mount
@@ -11,4 +13,6 @@ app = Starlette(
 )
 
 if __name__ == "__main__":
-    uvicorn.run(app)
+    host: str = os.getenv("CJ12_HOST", "0.0.0.0")  # noqa: S104
+    port: int = os.getenv("CJ12_PORT", "8000")
+    uvicorn.run(app, host=host, port=int(port))

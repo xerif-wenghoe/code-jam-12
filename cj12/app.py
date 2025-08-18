@@ -1,212 +1,112 @@
-import logging
-from abc import ABC, abstractmethod
-from typing import final
+from contextlib import suppress
+from hashlib import sha256
 
-from js import URL, Blob, FileReader, Uint8Array, alert, document
-from pyodide.ffi import create_proxy
-from pyodide.http import pyfetch
+from js import URL, Blob, alert, document
+from pyodide.ffi import to_js
 
-from cj12.aes import decrypt, encrypt, ensure_length
-from cj12.dom import ButtonElement, get_element_by_id
-from cj12.html import DOWNLOAD_SECTION, FILE_AREA
+from cj12.aes import decrypt, encrypt
+from cj12.container import Container, InvalidMagicError
+from cj12.dom import (
+    ButtonElement,
+    add_event_listener,
+    elem_by_id,
+    fetch_text,
+)
+from cj12.file import FileInput
+from cj12.methods.methods import Methods, methods
 
-logger = logging.getLogger(__name__)
 
-
-@final
 class App:
-    def __init__(self) -> None:
-        self._data: bytes | None = None
-        self._processed_data: bytes | None = None
-        self._current_filename: str = ""
-
     async def start(self) -> None:
-        document.title = "Code Jam 12"
+        document.title = "Super Duper Encryption Tool"
         document.body.innerHTML = await fetch_text("/ui.html")
 
-        self._register_file_input_handler()
+        self._data: bytes | None = None
+        self._key: bytes | None = None
+        self._container: Container | None = None
 
-    def _register_file_input_handler(self) -> None:
-        @create_proxy
-        def on_input_element_change(event: object) -> None:
-            file = event.target.files.item(0)
-            self._current_filename = file.name
-            document.getElementById("file-area").innerHTML = FILE_AREA.format(
-                file_name=file.name,
-                file_size=round(file.size / 1024, 2),
-            )
-            reader = FileReader.new()
-            reader.addEventListener("load", on_content_load)
-            reader.readAsArrayBuffer(file)  # pyright: ignore[reportUnknownMemberType, reportUnknownArgumentType, reportAttributeAccessIssue]
+        self._file_input = FileInput(self._on_data_received)
+        self._filename = ""
 
-        @create_proxy
-        def on_content_load(event: object) -> None:
-            # Convert ArrayBuffer to bytes using Uint8Array
-            array_buffer = event.target.result  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            uint8_array = Uint8Array.new(array_buffer)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            self._data = bytes(uint8_array)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-            get_element_by_id("encrypt-button", ButtonElement).disabled = False
-            get_element_by_id("decrypt-button", ButtonElement).disabled = False
+        self._encrypt_button = elem_by_id("encrypt-button", ButtonElement)
+        self._decrypt_button = elem_by_id("decrypt-button", ButtonElement)
+        add_event_listener(self._encrypt_button, "click", self._on_encrypt_button)
+        add_event_listener(self._decrypt_button, "click", self._on_decrypt_button)
 
-            # Register button handlers after they're enabled
-            self._register_encrypt_handler()
-            self._register_decrypt_handler()
+        self._methods = Methods(self._on_key_received)
+        await self._methods.register_selections()
 
-        file_input = get_element_by_id("file-input")
-        file_input.addEventListener("change", on_input_element_change)
+    async def _on_data_received(self, data: bytes, filename: str) -> None:
+        self._data = data
+        self._filename = filename
 
-    def _register_encrypt_handler(self) -> None:
-        @create_proxy
-        def on_encrypt_click(_: object) -> None:
-            self._handle_encryption()
+        with suppress(InvalidMagicError):
+            self._container = Container.from_bytes(data)
 
-        encrypt_button = get_element_by_id("encrypt-button", ButtonElement)
-        encrypt_button.addEventListener("click", on_encrypt_click)
+        if self._container is not None:
+            for method in methods:
+                if method.byte == self._container.method:
+                    await self._methods.go_to(method)
 
-    def _register_decrypt_handler(self) -> None:
-        @create_proxy
-        def on_decrypt_click(_: object) -> None:
-            self._handle_decryption()
+        self._update_button_availability()
 
-        decrypt_button = get_element_by_id("decrypt-button", ButtonElement)
-        decrypt_button.addEventListener("click", on_decrypt_click)
+    async def _on_key_received(self, key: bytes | None) -> None:
+        self._key = key
+        self._update_button_availability()
 
-    def _handle_encryption(self) -> None:
-        if self._data is None:
+    def _update_button_availability(self) -> None:
+        disabled = self._data is None or self._key is None
+        self._encrypt_button.disabled = disabled
+        self._decrypt_button.disabled = disabled
+
+        if self._container is None:
+            self._decrypt_button.disabled = True
+
+    async def _on_encrypt_button(self, _: object) -> None:
+        if self._methods.current is None:
             return
 
-        # Get key from input field
-        key_input = document.getElementById("key-input")
-        if key_input is None:
-            alert("Key input field not found")
-            return
+        data, key = self._ensure_data_and_key()
 
-        key_value = key_input.value
-        if not key_value or key_value.strip() == "":
-            alert("Please enter an encryption key")
-            return
-
-        try:
-            # Convert key to bytes (pad or truncate to 16, 24, or 32 bytes for AES)
-            key = ensure_length(key_value.encode("utf-8"))
-
-            # Encrypt the data
-            self._processed_data = encrypt(self._data, key)
-            self._show_download_button("encrypted")
-
-        except Exception as e:
-            logger.exception("Encryption failed")
-            alert(f"Encryption failed: {e!s}")
-
-    def _handle_decryption(self) -> None:
-        if self._data is None:
-            return
-
-        # Get key from input field
-        key_input = document.getElementById("key-input")
-        if key_input is None:
-            alert("Key input field not found")
-            return
-
-        key_value = key_input.value
-        if not key_value or key_value.strip() == "":
-            alert("Please enter a decryption key")
-            return
-
-        try:
-            # Convert key to bytes (pad or truncate to 16, 24, or 32 bytes for AES)
-            key = ensure_length(key_value.encode("utf-8"))
-
-            # Decrypt the data
-            self._processed_data = decrypt(self._data, key)
-            self._show_download_button("decrypted")
-
-        except Exception as e:
-            logger.exception("Decryption failed")
-            alert(f"Decryption failed: {e!s}")
-
-    def _show_download_button(self, operation: str) -> None:
-        # Remove existing download section if any
-        existing_download = document.getElementById("download-section")
-        if existing_download:
-            existing_download.remove()
-
-        # Create download section
-        download_section = document.createElement("section")
-        download_section.id = "download-section"
-
-        # Determine filename with appropriate extension
-        base_name = (
-            self._current_filename.rsplit(".", 1)[0]
-            if "." in self._current_filename
-            else self._current_filename
-        )
-        original_ext = (
-            self._current_filename.rsplit(".", 1)[1]
-            if "." in self._current_filename
-            else ""
+        container = Container(
+            method=self._methods.current.byte,
+            original_filename=self._filename,
+            data_hash=sha256(data).digest(),
+            data=encrypt(data, sha256(key).digest()),
         )
 
-        if operation == "encrypted":
-            download_filename = f"{base_name}_encrypted.bin"
-        # For decryption, try to restore original extension if possible
-        elif original_ext and original_ext.lower() not in ["bin", "enc", "encrypted"]:
-            download_filename = f"{base_name}_decrypted.{original_ext}"
-        else:
-            download_filename = f"{base_name}_decrypted.bin"
+        self._download_file(bytes(container), "encrypted_file.bin")
 
-        download_section.innerHTML = DOWNLOAD_SECTION.format(
-            operation=operation,
-            file_size=len(self._processed_data) if self._processed_data else 0,
-            title=operation.title(),
-        )
-
-        # Insert after file display
-        file_display = document.getElementById("file-display")
-        file_display.parentNode.insertBefore(download_section, file_display.nextSibling)
-
-        # Register download button handler
-        @create_proxy
-        def on_download_click(_: object) -> None:
-            self._download_file(download_filename)
-
-        download_button = get_element_by_id("download-button", ButtonElement)
-        download_button.addEventListener("click", on_download_click)
-
-    def _download_file(self, filename: str) -> None:
-        if self._processed_data is None:
+    async def _on_decrypt_button(self, _: object) -> None:
+        if self._container is None:
             return
 
-        uint8_array = Uint8Array.new(len(self._processed_data))
-        uint8_array.set(self._processed_data)
-        # Create blob from processed data
-        blob = Blob.new([uint8_array], {"type": "application/octet-stream"})
+        _, key = self._ensure_data_and_key()
 
-        # Create download link
+        decrypted = decrypt(self._container.data, sha256(key).digest())
+        decrypted_hash = sha256(decrypted).digest()
+
+        if decrypted_hash != self._container.data_hash:
+            alert("Incorrect key")
+            return
+
+        self._download_file(decrypted, self._container.original_filename)
+
+    def _download_file(self, data: bytes, filename: str) -> None:
+        u8 = to_js(data, create_pyproxies=False)
+        blob = Blob.new([u8], {"type": "application/octet-stream"})
         url = URL.createObjectURL(blob)
-
-        # Create temporary anchor element for download
-        download_link = document.createElement("a")
-        download_link.href = url
-        download_link.download = filename
-        download_link.style.display = "none"
-
-        # Add to document, click, and cleanup
-        document.body.appendChild(download_link)
-        download_link.click()
-        document.body.removeChild(download_link)
-
-        # Clean up the URL object
+        a = document.createElement("a")
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
         URL.revokeObjectURL(url)
 
+    def _ensure_data_and_key(self) -> tuple[bytes, bytes]:
+        if self._data is None or self._key is None:
+            msg = "Data or key not set"
+            raise ValueError(msg)
 
-class Method(ABC):
-    @abstractmethod
-    async def wait_for_encryption_key(self) -> bytes: ...
-    @abstractmethod
-    async def wait_for_decryption_key(self) -> bytes: ...
-
-
-async def fetch_text(url: str) -> str:
-    resp = await pyfetch(url)
-    return await resp.text()
+        return (self._data, self._key)

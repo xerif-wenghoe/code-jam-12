@@ -1,0 +1,80 @@
+<div id="canvasses">
+    <canvas width="512" class="selection-canvas" id="red-canvas"></canvas>
+    <canvas width="512" class="selection-canvas" id="green-canvas"></canvas>
+    <canvas width="512" class="selection-canvas" id="blue-canvas"></canvas>
+</div>
+<div id="output-div">
+    <div id="output-colour"></div>
+    <div id="output-text">
+        <div id="output-header">Colour Hex Value</div>
+        <div id="output-value"></div>
+    </div>
+</div>
+
+<style>
+  #cursor-preview {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      pointer-events: none; /* don’t block clicks */
+      transform: translate(-50%, -50%);
+    }
+
+  #method {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+  }
+
+  #canvasses {
+    margin-top: 15px;
+    grid-column: span 3;
+    display: grid;
+    gap: 8px;
+  }
+
+  #canvasses > canvas {
+    width: 512px;
+    height: 30px;
+    justify-self: center;
+    border: 2px solid #FFFFFF;
+  }
+
+  #output-div {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-self: center;
+    gap: 10px;
+  }
+
+  #output-colour {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      border: 2px solid #00FF00;
+  }
+
+  #output-text {
+    height: 100px;
+    width: 200px;
+    border: 1px solid #00ff00;
+  }
+
+  #output-header {
+    white-space: nowrap;
+    display: grid;
+    place-items: center;
+    height: 50px;
+  }
+
+  #output-value {
+    white-space: nowrap;
+    display: grid;
+    place-items: center;
+    height: 50px;
+  }
+</style>
