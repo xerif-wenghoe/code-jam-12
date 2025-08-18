@@ -239,10 +239,8 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
-        # print(self.combination)
         if self.on_key_received is not None:
             await self.on_key_received(bytes(self.combination))
-
 
     async def reset_combination(self, _event: object) -> None:
         self.last_mousedown = None
@@ -251,6 +249,5 @@ class SafeMethod:
         self.prev_angle = None
         self.total_angle = None
         self.combination = []
-        # print(self.combination)
         if self.on_key_received is not None:
             await self.on_key_received(bytes(self.combination))
