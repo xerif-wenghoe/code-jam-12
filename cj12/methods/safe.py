@@ -233,7 +233,9 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
-        self.output_div.innerText = ' -> '.join(f"{'+' if x > 0 else ''}{x}" for x in self.combination)
+        self.output_div.innerText = " -> ".join(
+            f"{'+' if x > 0 else ''}{x}" for x in self.combination
+        )
         if self.on_key_received is not None:
             await self.on_key_received(str(self.combination).encode())
 
@@ -244,6 +246,6 @@ class SafeMethod:
         self.prev_angle = None
         self.total_angle = None
         self.combination = []
-        self.output_div.innerText = ''
+        self.output_div.innerText = ""
         if self.on_key_received is not None:
             await self.on_key_received(str(self.combination).encode())

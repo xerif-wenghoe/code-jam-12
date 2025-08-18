@@ -69,7 +69,6 @@ class MusicMethod:
         self.canvas.height = self.height = rect_canvas.height
         self.box_width = self.width / self.columns
         self.box_height = self.height / self.rows
-        
 
         self.timeout_calls = []
 
