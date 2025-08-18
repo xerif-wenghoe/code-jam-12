@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from js import Promise, window, setTimeout, setInterval, clearInterval
+from js import Promise, window, setTimeout, clearTimeout
 
 
 from cj12.dom import add_event_listener, elem_by_id
@@ -80,6 +80,8 @@ class MusicMethod:
         self.boxWidth = self.width/self.columns
         self.boxHeight = self.height/self.rows 
 
+        self.timeoutCalls = []
+
         self._draw_grid()
 
         # Control buttons and handlers
@@ -118,7 +120,8 @@ class MusicMethod:
             self._play_notes(self.grid[self.currentColumn])
             self._draw_grid()
             self.currentColumn = (self.currentColumn + 1) % self.columns
-            setTimeout(self.tick_proxy, self.interval)
+            print(self.interval)
+            self.timeoutCalls.append(setTimeout(self.tick_proxy, self.interval))
         
 
     def _play_note(self, noteName: str) -> None:
@@ -149,17 +152,21 @@ class MusicMethod:
         except:
             print("errror")
             pass
+        
         self._draw_grid()
             
     # look into intervalevents
     def _toggle_play(self, event: object) -> None:
         self.playing = not self.playing
+        for timeoutCall in self.timeoutCalls:
+            clearTimeout(timeoutCall)
         if self.playing:
             self.playButton.innerText = "⏸"
             self.currentColumn = 0
             self._tick()
         else:
             self.playButton.innerText = "▶"
+        
         self._draw_grid()
             
     def _change_bpm(self, event: object):
