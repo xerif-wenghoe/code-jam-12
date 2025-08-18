@@ -49,7 +49,6 @@ class ChessMethod:
         add_event_listener(self.canvas_pieces, "mouseup", self.on_mouse_up)
         add_event_listener(self.canvas_pieces, "mousemove", self.on_mouse_move)
         add_event_listener(self.canvas_pieces, "keydown", self.on_keypress)
-        # add_event_listener(self.canvas_pieces, "dblclick", self.on_double_click)
 
         # Control buttons and handlers
         self.btn_clear: Any = elem_by_id("btn-clear-board")
@@ -287,18 +286,28 @@ class ChessMethod:
         self.draw_pieces_on_board(mx, my)
         await self.update_key()
 
-
     async def on_keypress(self, event: object) -> None:
-
-        # print(f"{event.key} pressed!")
-        piece = {" ": None, "K": "King", "Q": "Queen", "R": "Rook", "B": "Bishop", "N": "Knight", "P": "Pawn"}.get(event.key.upper(), False)
-        if piece == False or (board_square := self.mouse_on_board_square(*self.last_mouse_pos)) is None:
+        piece = {
+            " ": None,
+            "K": "King",
+            "Q": "Queen",
+            "R": "Rook",
+            "B": "Bishop",
+            "N": "Knight",
+            "P": "Pawn",
+        }.get(event.key.upper(), False)
+        if (
+            not piece
+            or (board_square := self.mouse_on_board_square(*self.last_mouse_pos))
+            is None
+        ):
             return
         r, c = board_square
-        self.chessboard[r][c] = piece and (f'B_{piece}' if self.chessboard[r][c] == f'W_{piece}' else f'W_{piece}')
+        self.chessboard[r][c] = piece and (
+            f"B_{piece}" if self.chessboard[r][c] == f"W_{piece}" else f"W_{piece}"
+        )
         self.draw_pieces_on_board(*self.last_mouse_pos)
         await self.update_key()
-
 
     async def update_key(self) -> None:
         conversion = {
