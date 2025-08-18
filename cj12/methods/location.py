@@ -27,8 +27,8 @@ class LocationMethod:
         window.L.tileLayer(layer_url, layer_opts).addTo(m)
 
         async def on_click(e: object) -> None:
-            lat = float(e.latlng.lat)  # pyright: ignore[reportAttributeAccessIssue]
-            lng = float(e.latlng.lng)  # pyright: ignore[reportAttributeAccessIssue]
+            lat = float(e.latlng.lat)
+            lng = float(e.latlng.lng)
 
             rlat = round(lat, 3)
             rlng = round(lng, 3)

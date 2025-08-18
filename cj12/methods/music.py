@@ -85,11 +85,11 @@ class MusicMethod:
                 resolve: Callable[[object], None],
                 _reject: Callable[[object], None],
             ) -> None:
-                sound = window.Audio.new()  # pyright: ignore[reportAttributeAccessIssue]
+                sound = window.Audio.new()
                 sound.onloadeddata = lambda *_, sound=sound: resolve(sound)
                 sound.src = src
 
-            return Promise.new(executor)  # pyright: ignore[reportAttributeAccessIssue]
+            return Promise.new(executor)
 
         note_names = [f"Piano.{i}" for i in range(7, 23)]
 

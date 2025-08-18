@@ -71,18 +71,18 @@ class ChessMethod:
                 resolve: Callable[[object], None],
                 _reject: Callable[[object], None],
             ) -> None:
-                img = window.Image.new()  # pyright: ignore[reportAttributeAccessIssue]
+                img = window.Image.new()
                 img.onload = lambda *_, img=img: resolve(img)
                 img.src = src
 
-            return Promise.new(executor)  # pyright: ignore[reportAttributeAccessIssue]
+            return Promise.new(executor)
 
         piece_names = [
             f"{color}_{piece}"
             for piece in ("King", "Queen", "Rook", "Bishop", "Knight", "Pawn")
             for color in "BW"
         ]
-        images = await Promise.all(  # pyright: ignore[reportAttributeAccessIssue]
+        images = await Promise.all(
             [
                 load_image(f"/methods/chess/pieces/{piece_name}.png")
                 for piece_name in piece_names
@@ -192,7 +192,7 @@ class ChessMethod:
         dx, dy = (
             (-self.piece_width / 2, -self.piece_height) if offset is None else offset
         )
-        (self.ctx_pieces if ctx is None else ctx).drawImage(  # pyright: ignore[reportAttributeAccessIssue]
+        (self.ctx_pieces if ctx is None else ctx).drawImage(
             img,
             x + dx,
             y + dy,
@@ -222,9 +222,9 @@ class ChessMethod:
             self.draw_piece(drag, mx, my)
 
     def get_mouse_coords(self, event: object) -> tuple[float, float]:
-        rect = self.canvas_board.getBoundingClientRect()  # pyright: ignore[reportAttributeAccessIssue]
-        mx = event.clientX - rect.left - rect.width // 2  # pyright: ignore[reportAttributeAccessIssue]
-        my = event.clientY - rect.top - rect.height // 2  # pyright: ignore[reportAttributeAccessIssue]
+        rect = self.canvas_board.getBoundingClientRect()
+        mx = event.clientX - rect.left - rect.width // 2
+        my = event.clientY - rect.top - rect.height // 2
         return mx, my
 
     def mouse_on_board_square(self, mx: float, my: float):  # noqa: ANN201
@@ -260,7 +260,7 @@ class ChessMethod:
 
     async def on_mouse_up(self, event: object) -> None:
         mx, my = self.get_mouse_coords(event)
-        px, py = self.last_mousedown  # pyright: ignore[reportGeneralTypeIssues]
+        px, py = self.last_mousedown
         if (px - mx) ** 2 + (py - my) ** 2 > MOUSE_DEADZONE_RADIUS**2:  # noqa: SIM102
             if self.dragging is not None and (
                 board_square := self.mouse_on_board_square(mx, my)
