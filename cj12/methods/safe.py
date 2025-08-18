@@ -112,7 +112,6 @@ class SafeMethod:
         self.prerender_ticks()
         self.draw_ticks()
         self.output_div = elem_by_id("output")
-        self.log_output("Hello!")
 
         add_event_listener(self.dial_canvas, "mousedown", self.on_mouse_down)
         add_event_listener(self.dial_canvas, "mousemove", self.on_mouse_move)
@@ -181,10 +180,6 @@ class SafeMethod:
         ctx.fill()
         ctx.stroke()
 
-    # Define a function to log
-    def log_output(self, msg: str) -> None:
-        self.output_div.innerHTML += msg + "<br>"
-        self.output_div.scrollTop = self.output_div.scrollHeight  # auto-scroll
 
     def get_mouse_coords(self, event: object) -> None:
         rect = self.dial_canvas.getBoundingClientRect()
@@ -239,6 +234,7 @@ class SafeMethod:
         self.draw_ticks(self.last_dial_value * TWO_PI / TICKS)
         self.prev_angle = None
         self.total_angle = None
+        # print(self.combination)
         if self.on_key_received is not None:
             await self.on_key_received(bytes(self.combination))
 
