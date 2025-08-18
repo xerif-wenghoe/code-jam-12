@@ -29,6 +29,10 @@ class PatternLockMethod:
 
 
     async def setup(self) -> None: 
+        self.init()
+        self.setup_event_listener()
+
+    def init(self) -> None:
         self.node_list: list[Node] = []
         self.last_node: Node | None = None
         self.sequence: list[int] = []
@@ -41,7 +45,6 @@ class PatternLockMethod:
 
         self.generate_nodes()
         self.draw_pattern()
-        self.add_event_listener()
 
     def generate_nodes(self) -> None:
         """
@@ -132,8 +135,12 @@ class PatternLockMethod:
         for node in self.node_list:
             if ((x - node.x_coor) ** 2 + (y - node.y_coor) ** 2) ** 0.5 <= self.dot_radius:
                 return node
-    
-    def add_event_listener(self):
+
+    def on_dimension_change(self, evt) -> None:
+        self.dimension = 3 + int(evt.target.value)
+        self.init()
+
+    def setup_event_listener(self) -> None:
         """
         Register all the event listener in the canvas
         """
@@ -143,9 +150,9 @@ class PatternLockMethod:
             for node in self.node_list:
                 node.connected = False
 
-            self.connected_nodes = []
+            self.connected_nodes.clear()
             self.last_node = None
-            self.sequence = []
+            self.sequence.clear()
 
         async def mouse_up(evt):
             self.is_mouse_down = False
@@ -155,8 +162,10 @@ class PatternLockMethod:
                 await self.on_key_received("".join(map(lambda x: str(x), self.sequence)).encode())
                 
             # console.log("".join(map(lambda x: str(x), self.sequence)))
-
+        
+        self.dimension_selection = elem_by_id("dial-num")
         add_event_listener(self.canvas, "mousedown", mouse_down)
         add_event_listener(self.canvas, "mouseup", mouse_up)
         add_event_listener(self.canvas, "mousemove", self.on_move)
+        add_event_listener(self.dimension_selection, "input", self.on_dimension_change)
 
