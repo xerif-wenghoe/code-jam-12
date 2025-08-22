@@ -1,148 +1,123 @@
-# Python Discord Code Jam 12 - Tubular Tulips
+# Super Duper Encryption Tool
 
-## Prerequisites
+## What's this?
 
-- Python 3.13+
-- [uv](https://docs.astral.sh/uv/) package manager
+It's a file encryption and decryption tool.
 
-### Installing uv
+## Where do I put in the password?
 
-If you don't have uv installed, you can install it using:
+Um... password?
 
-```bash
-# On macOS and Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+Oh, buddy.
 
-# On Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+Passwords are low-entropy relics of the 90s, reused across sites, and breached before you’ve even finished typing them. You deserve better.
 
-# Or via pip
-pip install uv
-```
+Our _superior_ tool trades in secure keys, not passwords. The kind of keys that don’t fit on a sticky note, can’t be phished, and would make a password manager weep with joy.
 
-## Setup
+In the big '25, if you’re still saying “just use a strong password,” you’re already compromised, which is why we provide _actually_ secure alternatives.
 
-1. Clone the repository:
+## Methods
 
-   ```bash
-   git clone https://github.com/xerif-wenghoe/code-jam-12
-   cd code-jam-12
-   ```
+### <img src="static/methods/chess/img.png" /> Chess
 
-2. Install dependencies:
-   ```bash
-   uv sync
-   ```
+1. Arrange the chess board in any way you want.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the board.
 
-This will create a virtual environment and install all project dependencies including development dependencies.
+---
 
-## Development
+### <img src="static/methods/location/img.png" /> Location
 
-### Running Tests
+1. Zoom in very far and click anywhere on the map.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the location.
 
-Run the test suite using pytest:
+---
 
-```bash
-uv run pytest
-```
+### <img src="static/methods/safe/img.png" /> Safe
 
-### Code Quality
+1. Spin the dial to make a unique sequence.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the sequence.
 
-This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+---
 
-#### Linting
+### <img src="static/methods/pattern_lock/img.png" /> Pattern
 
-Check for linting issues:
+1. Connect dots in any patterns to form a unique connection sequence
+2. To change the pattern, simply redo step 1 to make a new pattern. The old pattern will disappear automatically.
+3. Upload a file (or do it before this) to be encrypted/decrypted with the pattern.
 
-```bash
-uv run ruff check
-```
+A 3x3 grid is the default, but you may choose to use a 4x4 or 6x6 grid.
 
-Auto-fix linting issues where possible:
+As the key is simply the sequence in of the connected dots based on their position, a 3x3 encrypted file can be decrypted from a 4x4 pattern.
 
-```bash
-uv run ruff check --fix
-```
+---
 
-#### Formatting
+### <img src="static/methods/music/img.png" /> Music
 
-Format code:
+1. Place down notes on the grid.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the song.
 
-```bash
-uv run ruff format
-```
+---
 
-Check if code is properly formatted:
+### <img src="static/methods/direction/img.png" width="16" /> Direction
 
-```bash
-uv run ruff format --check
-```
+1. Drag to make a unique sequence of directions.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the sequence.
 
-### Pre-commit Hooks
+---
 
-This project comes with pre-configured pre-commit hooks for automatic code quality checks. The configuration includes:
+### <img src="static/methods/colour_picker/img.png" /> Colour Picker
 
-- **Basic checks**: TOML/YAML validation, end-of-file fixing, trailing whitespace removal
-- **Ruff**: Linting and formatting with `ruff-check` and `ruff-format`
-- **Tests**: Automatic pytest execution before commits
+1. Click and drag on scale of each red, green and blue to generate the desired colour as your encryption key. The colour and its hex representation will be shown at the bottom of the scale.
+2. Upload a file (or do it before this) to be encrypted/decrypted with the pattern.
 
-To set up pre-commit hooks:
+Simply telling the other person about the colour of key will give them a hard time getting the exact code for decryption.
 
-1. Install the pre-commit hooks:
+## Running locally
 
-   ```bash
-   uv run pre-commit install
-   ```
+1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
+2. Clone our repository: `git clone https://github.com/xerif-wenghoe/code-jam-12`
+3. Change into the directory: `cd code-jam-12`
+4. Sync dependencies: `uv sync`
+5. Run the server: `uv run server.py`
+6. Access the tool at http://localhost:8000
 
-2. Run hooks on all files (optional):
-   ```bash
-   uv run pre-commit run --all-files
-   ```
+## Technical details
 
-Now the hooks will run automatically on every commit, ensuring code quality and running tests.
+- We use [Pyodide](https://pyodide.org/) for logic and DOM manipulation.
+- All methods eventually generate a 256-bit key for AES.
+- [We implemented AES ourselves](cj12/aes.py) using numpy, all in the browser!
+- Encrypted data is contained inside our [custom container format](cj12/container.py) that stores:
+  - Magic bytes (`SDET`)
+  - Method used
+  - Original filename
+  - Hash of decrypted data
+  - Encrypted data
 
-### Adding Dependencies
+## Contributions
 
-Add a runtime dependency:
-
-```bash
-uv add <package-name>
-```
-
-Add a development dependency:
-
-```bash
-uv add --dev <package-name>
-```
-
-### Running the Server
-
-This project includes a web server built with Starlette and Uvicorn that serves static files. To start the server:
-
-```bash
-uv run server.py
-```
-
-The server will start and be available at http://localhost:8000 by default.
-
-## Configuration
-
-The project configuration is managed in `pyproject.toml`:
-
-- **Ruff**: Configured with comprehensive linting rules
-- **Pytest**: Set up for testing with development dependencies
-- **Python**: Requires Python 3.13+
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Test the server: `uv run server.py`
-5. Commit your changes: `git commit -am 'Add some feature'`
-6. Push to the branch: `git push origin feature-name`
-7. Submit a pull request
+- [Xerif](https://github.com/xerif-wenghoe) ⭐:
+  - Pattern method
+  - Colour picker method
+  - Documentation
+- [interrrp](https://github.com/interrrp):
+  - Method framework
+  - Container format
+  - Location method
+  - Documentation
+- [MaxMinMedian](https://github.com/max-min-median):
+  - AES implementation
+  - Chess method
+  - Safe method
+  - Code documentation
+- [Atonement](https://github.com/cin-lawrence):
+  - Initial method framework
+  - Direction lock method
+- [greengas](https://github.com/greengas):
+  - Initial UI
+  - Music method
+- [Candy](https://discord.com/users/1329407643365802025):
+  - Location method idea
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT license](LICENSE).
