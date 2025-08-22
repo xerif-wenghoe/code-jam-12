@@ -93,6 +93,8 @@ Simply telling the other person about the colour of key will give them a hard ti
   - Hash of decrypted data
   - Encrypted data
 
+### [LINK](https://www.youtube.com/watch?v=MmZzPMagkXM) to presentation video
+
 ## Contributions
 
 - [Xerif](https://github.com/xerif-wenghoe) ⭐:
