@@ -83,7 +83,7 @@ Simply telling the other person about the colour of key will give them a hard ti
 
 ## Technical details
 
-- We use [Pyodide](https://pyodide.org/).
+- We use [Pyodide](https://pyodide.org/) for logic and DOM manipulation.
 - All methods eventually generate a 256-bit key for AES.
 - [We implemented AES ourselves](cj12/aes.py).
 - Encrypted data is contained inside our [custom container format](cj12/container.py) which stores:
