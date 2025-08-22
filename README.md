@@ -85,13 +85,38 @@ Simply telling the other person about the colour of key will give them a hard ti
 
 - We use [Pyodide](https://pyodide.org/) for logic and DOM manipulation.
 - All methods eventually generate a 256-bit key for AES.
-- [We implemented AES ourselves](cj12/aes.py).
-- Encrypted data is contained inside our [custom container format](cj12/container.py) which stores:
+- [We implemented AES ourselves](cj12/aes.py) using numpy, all in the browser!
+- Encrypted data is contained inside our [custom container format](cj12/container.py) that stores:
   - Magic bytes (`SDET`)
   - Method used
   - Original filename
   - Hash of decrypted data
   - Encrypted data
+
+## Contributions
+
+- [Xerif](https://github.com/xerif-wenghoe) ⭐:
+  - Pattern method
+  - Colour picker method
+  - Documentation
+- [interrrp](https://github.com/interrrp):
+  - Method framework
+  - Container format
+  - Location method
+  - Documentation
+- [MaxMinMedian](https://github.com/max-min-median):
+  - AES implementation
+  - Chess method
+  - Safe method
+  - Code documentation
+- [Atonement](https://github.com/cin-lawrence):
+  - Initial method framework
+  - Direction lock method
+- [greengas](https://github.com/greengas):
+  - Initial UI
+  - Music method
+- [Candy](https://discord.com/users/1329407643365802025):
+  - Location method idea
 
 ## License
 
